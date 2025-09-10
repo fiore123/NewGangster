@@ -569,8 +569,8 @@
     const ENERGY_COST_PER_FIGHT = 10;
     const GOLD_COST_REFILL_ENERGY = 5;
     const AVATARS = {
-        male: 'https://sdmntpreastus.oaiusercontent.com/files/00000000-1538-61f9-ab36-0b1ab9096b85/raw?se=2025-09-10T04%3A31%3A57Z&sp=r&sv=2024-08-04&sr=b&scid=41a6ebc4-569d-533e-830a-b28bb1688ad8&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-09T19%3A59%3A42Z&ske=2025-09-10T19%3A59%3A42Z&sks=b&skv=2024-08-04&sig=d785BY4Xr4xPkxx9%2BO%2BxJro3QRPNFStrwZW6gDJC4i4%3D',
-        female: 'https://sdmntpreastus.oaiusercontent.com/files/00000000-f66c-61f9-9fe7-a7ce9d781494/raw?se=2025-09-10T04%3A30%3A42Z&sp=r&sv=2024-08-04&sr=b&scid=fcaaa70a-b69b-5739-b43f-ba17212815f0&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-09T20%3A01%3A37Z&ske=2025-09-10T20%3A01%3A37Z&sks=b&skv=2024-08-04&sig=hOcdjTSCKGnfx7UUCxhWwI9ZFhA2yZAGanUZAJYld84%3D'
+        male: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KSDM7XIXe-zSkq3rF8O88JbBuaKw0Rj34EzIiE68Kg2LUs5yq0bzEDcDJ3Nj0XBxBAWlu9IrrQoQT8ER-4Z1DYrY13EUtKNcFmBV9ir_ROgXdrenNwDOtHMjCOI5p3jmYcO0af0oEw9XD48pMuQwbnpWn2By9-h0Cox9gB1pNBpGBdV=s1024?authuser=1',
+        female: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KRQCa7yEhbvJHINQ-wLSvFxi0mpSLPYZi07X03PwZL5K832IV-aCs_9gw94hf-WYoITSrZ6RZjsZ-f6TzQiXfjExamta1KWcjDFuWo1hN73SqRuveat7P8Mpd1ZonpFx6IdWC35u4U0z9is4K5pyD8ECiGPBUgNm6M3FnWd__UK2iorZg=s1024?authuser=1'
     };
     const RARITY_TIERS = {
         COMUM:    { multiplier: 1.0, className: 'rarity-COMUM', dropChance: 60 },
@@ -635,6 +635,10 @@
     let db, auth, userId;
     let gangUnsubscribe = null;
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // Auto-Save
+    let autoSaveTimeout = null;
+    let isSaving = false;
 
 
     // --- GERENCIADOR DE SOM ---
@@ -728,6 +732,7 @@
             player.avatar = AVATARS[gender];
             updateUI();
             showToast("Avatar atualizado!");
+            triggerAutoSave();
         }
     }
 
@@ -1727,14 +1732,12 @@
     }
 
     function startOfflinePatrol() {
-        if (player.activeMission) {
-            showToast("Você não pode iniciar uma patrulha com uma missão ativa.", 'error');
-            return;
-        }
+        if (player.activeMission || player.offlinePatrol.active) return;
         player.offlinePatrol.active = true;
         player.offlinePatrol.startTime = new Date().getTime();
         showToast("Patrulha iniciada!", 'success');
         renderMissions();
+        saveGame(true); // Salva imediatamente para garantir que o estado seja persistido antes de fechar a aba
     }
 
     function stopOfflinePatrol(isFromLoad = false) {
@@ -1804,6 +1807,7 @@
         player.offlinePatrol = { active: false, startTime: null };
         updateUI();
         renderMissions();
+        triggerAutoSave();
     }
 
     function checkOfflinePatrolRewards() {
@@ -1868,6 +1872,7 @@
         player.lastEnergyRegenTime = new Date().getTime();
         showToast("Energia recarregada!", "success");
         updateUI();
+        triggerAutoSave();
     }
     
     function checkDailyReward() {
@@ -1906,6 +1911,7 @@
         player.dailyReward.lastLoginDate = today;
         showModal(`Recompensa Diária (Dia ${streak})`, rewardText);
         updateUI();
+        triggerAutoSave();
     }
 
     function claimAchievement(achievementId) {
@@ -1947,6 +1953,7 @@
             soundManager.play('levelUp');
             updateUI();
             renderAchievements();
+            triggerAutoSave();
         }
     }
 
@@ -2046,6 +2053,7 @@
             player.gangId = newGangRef.id;
             showToast(`Gangue [${tag}] ${name} criada com sucesso!`, "success");
             renderGangScreen();
+            triggerAutoSave();
         } catch (e) {
             console.error("Error creating gang: ", e);
             showToast("Erro ao criar a gangue.", "error");
@@ -2070,6 +2078,7 @@
                 player.gangId = gangIdToJoin;
                 showToast(`Você se juntou à gangue ${gangDoc.data().name}!`, "success");
                 renderGangScreen();
+                triggerAutoSave();
             } else {
                 showToast("ID de gangue inválido.", "error");
             }
@@ -2090,6 +2099,7 @@
             showToast("Você saiu da gangue.", "success");
             player.gangId = null;
             renderGangScreen();
+            triggerAutoSave();
         } catch(e) {
              console.error("Error leaving gang: ", e);
              showToast("Erro ao sair da gangue.", "error");
@@ -2115,6 +2125,7 @@
             player.money -= amount;
             updateUI();
             showToast(`Você depositou $${amount.toLocaleString()} no banco da gangue!`, "success");
+            triggerAutoSave();
         } catch (e) {
             console.error("Error depositing to gang bank: ", e);
             showToast("Erro ao depositar.", "error");
@@ -2155,6 +2166,7 @@
             player.stats.totalMoneyEarned += amount;
             updateUI();
             showToast(`Você sacou $${amount.toLocaleString()} do banco da gangue!`, "success");
+            triggerAutoSave();
         } catch (e) {
             console.error("Error withdrawing from gang bank: ", e);
             showToast("Erro ao sacar.", "error");
@@ -2282,7 +2294,7 @@
         if (newName && newName !== player.name) {
             player.name = newName;
             updateUI();
-            saveGame();
+            saveGame(true);
             showToast("Nome alterado com sucesso!");
             modal.classList.add('hidden');
         } else if (!newName) {
@@ -2309,7 +2321,7 @@
         if (newName) {
             player.name = newName;
             updateUI();
-            saveGame(); // Salva o nome inicial
+            saveGame(true); // Salva o nome inicial
         }
         modal.classList.add('hidden');
         document.getElementById('modal-close-btn').classList.remove('hidden');
@@ -2786,21 +2798,35 @@
     }
     
     // --- PERSISTÊNCIA ---
-    async function saveGame() {
-        if (!userId) {
-            showToast("Erro de autenticação. Não é possível salvar.", "error");
+    async function saveGame(showNotification = false) {
+        if (!userId || isSaving) {
             return;
         }
+        isSaving = true;
         try {
             const playerDocRef = window.firebase.doc(db, `/artifacts/${appId}/users/${userId}/player`, 'saveData');
-            const playerStateToSave = { ...player };
+            const playerStateToSave = JSON.parse(JSON.stringify(player));
             
             await window.firebase.setDoc(playerDocRef, playerStateToSave);
-            showToast("Progresso salvo com sucesso!", "success");
+            if (showNotification) {
+                showToast("Progresso salvo com sucesso!", "success");
+            }
+            console.log("Progresso salvo.");
         } catch(e) {
             console.error("Error saving game to Firestore: ", e);
-            showToast("Erro ao salvar o progresso.", "error");
+            if (showNotification) {
+                showToast("Erro ao salvar o progresso.", "error");
+            }
+        } finally {
+            isSaving = false;
         }
+    }
+
+    function triggerAutoSave() {
+        if (autoSaveTimeout) {
+            clearTimeout(autoSaveTimeout);
+        }
+        autoSaveTimeout = setTimeout(() => saveGame(false), 2000); // Salva 2 segundos após a última ação
     }
     
     async function loadGame() {
@@ -2934,12 +2960,12 @@
             // !!! IMPORTANTE: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI !!!
             // Você encontra isso nas "Configurações do projeto" no console do Firebase.
             const firebaseConfig = {
-                apiKey: "",
-                authDomain: "",
-                projectId: "",
-                storageBucket: "",
-                messagingSenderId: "",
-                appId: ""
+                apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
+                authDomain: "new-gangstar-online.firebaseapp.com",
+                projectId: "new-gangstar-online",
+                storageBucket: "new-gangstar-online.firebasestorage.app",
+                messagingSenderId: "126343704437",
+                appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
             };
 
             // O código abaixo verifica se você colou a configuração.
@@ -3052,4 +3078,5 @@
 
 </body>
 </html>
+
 
