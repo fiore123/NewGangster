@@ -2869,7 +2869,6 @@
                 potions = data.potions || [];
                 document.getElementById('admin-items').value = JSON.stringify(data, null, 2);
             } else {
-                // Se não houver dados, crie um documento inicial
                 const defaultItems = {
                      weapons: [
                         { id: 1, name: "Canivete", baseDamage: 8, price: 150, image: "https://placehold.co/200x200/444444/eeeeee?text=Canivete" },
@@ -2888,6 +2887,7 @@
                 armors = defaultItems.armors;
                 potions = defaultItems.potions;
                 document.getElementById('admin-items').value = JSON.stringify(defaultItems, null, 2);
+                console.log("Documento de itens padrão criado.");
             }
 
             if (gameplaySnap.exists()) {
@@ -2910,6 +2910,7 @@
                 missions = defaultGameplay.missions;
                 achievements = defaultGameplay.achievements;
                 document.getElementById('admin-gameplay').value = JSON.stringify(defaultGameplay, null, 2);
+                console.log("Documento de gameplay padrão criado.");
             }
 
             if(fromSave) {
@@ -2930,43 +2931,48 @@
             if (!firebaseConfig) {
                 console.error("Firebase config não encontrada.");
                 document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Não foi possível conectar aos serviços online.</p>';
-                return;
+                return null;
             }
             
-            window.firebase.setLogLevel('debug');
             const app = window.firebase.initializeApp(firebaseConfig);
             db = window.firebase.getFirestore(app);
             auth = window.firebase.getAuth(app);
 
+            // Se já houver um usuário, retorna o ID dele
+            if (auth.currentUser) {
+                console.log("Usuário já autenticado:", auth.currentUser.uid);
+                return auth.currentUser.uid;
+            }
+
+            // Se não, faz o login (anônimo ou com token) e espera a confirmação
             return new Promise((resolve) => {
-                const unsubscribe = window.firebase.onAuthStateChanged(auth, async (user) => {
-                    unsubscribe(); // Roda apenas uma vez para pegar o estado inicial
+                const unsubscribe = window.firebase.onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        userId = user.uid;
-                        console.log("Usuário autenticado:", userId);
-                        resolve();
-                    } else {
-                        try {
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                const userCredential = await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
-                                userId = userCredential.user.uid;
-                            } else {
-                                const userCredential = await window.firebase.signInAnonymously(auth);
-                                userId = userCredential.user.uid;
-                            }
-                            console.log("Usuário autenticado:", userId);
-                            resolve();
-                        } catch(authError){
-                            console.error("Erro na autenticação:", authError);
-                            resolve(); 
-                        }
+                        console.log("Usuário autenticado com sucesso:", user.uid);
+                        unsubscribe(); // Para de ouvir depois de confirmar o login
+                        resolve(user.uid);
                     }
                 });
+
+                (async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await window.firebase.signInAnonymously(auth);
+                        }
+                    } catch (authError) {
+                        console.error("Erro na autenticação:", authError);
+                        unsubscribe();
+                        resolve(null);
+                    }
+                })();
             });
 
         } catch (e) {
             console.error("Erro na inicialização do Firebase:", e);
             document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro ao conectar aos serviços online.</p>';
+            return null;
         }
     }
 
@@ -2996,7 +3002,21 @@
     window.onload = async function() {
         soundManager.init();
         
-        await initFirebase();
+        userId = await initFirebase();
+        
+        if (!userId) {
+            showToast("Falha na autenticação. As funções online não funcionarão.", "error");
+            // Carrega dados padrão para o jogo funcionar offline
+            player = getInitialPlayerState();
+            const defaultAdminData = getInitialAdminData();
+            Object.assign(window, defaultAdminData);
+            updateUI();
+            populateAdminSelectors();
+            setDistributionAmount(1);
+            showScreen('main');
+            return; 
+        }
+        
         await loadAdminData(); 
         await loadGame(); 
         
@@ -3010,7 +3030,6 @@
         
         checkDailyReward();
         
-        // Chama o prompt de nome apenas se for realmente um novo jogador
         if (player.name === "Novo Gangster") {
             promptForPlayerName();
         }
