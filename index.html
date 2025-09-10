@@ -2819,7 +2819,14 @@
             const initialState = getInitialPlayerState();
             if(docSnap.exists()){
                 const loadedData = docSnap.data();
+
+                // Faz um merge seguro, especialmente para o inventário, para garantir que saves antigos sejam compatíveis.
                 player = { ...initialState, ...loadedData };
+                player.inventory = { ...initialState.inventory, ...(loadedData.inventory || {}) };
+                // Garante que as listas de armas e armaduras sempre existam.
+                player.inventory.weapons = player.inventory.weapons || [];
+                player.inventory.armors = player.inventory.armors || [];
+                
                 showToast("Progresso carregado.", "success");
             } else {
                 console.log("Nenhum save encontrado. Criando um novo.");
@@ -3048,4 +3055,5 @@
 
 </body>
 </html>
+
 
