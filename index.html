@@ -212,9 +212,6 @@
                                  <button onclick="setAvatar('female')" class="btn-game bg-pink-700 w-full p-2 rounded-md font-bold">Feminino</button>
                              </div>
                         </div>
-                         <div class="mt-4 flex gap-4 justify-center">
-                            <button onclick="saveGame()" class="btn-game bg-indigo-700 px-4 py-2 rounded-md"><i class="fas fa-save"></i> Salvar</button>
-                        </div>
                     </div>
                     <div class="md:w-2/3">
                         <h3 class="text-2xl font-bold text-yellow-300">Atributos</h3>
@@ -572,8 +569,8 @@
     const ENERGY_COST_PER_FIGHT = 10;
     const GOLD_COST_REFILL_ENERGY = 5;
     const AVATARS = {
-        male: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KSDM7XIXe-zSkq3rF8O88JbBuaKw0Rj34EzIiE68Kg2LUs5yq0bzEDcDJ3Nj0XBxBAWlu9IrrQoQT8ER-4Z1DYrY13EUtKNcFmBV9ir_ROgXdrenNwDOtHMjCOI5p3jmYcO0af0oEw9XD48pMuQwbnpWn2By9-h0Cox9gB1pNBpGBdV=s1024?authuser=1',
-        female: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KRQCa7yEhbvJHINQ-wLSvFxi0mpSLPYZi07X03PwZL5K832IV-aCs_9gw94hf-WYoITSrZ6RZjsZ-f6TzQiXfjExamta1KWcjDFuWo1hN73SqRuveat7P8Mpd1ZonpFx6IdWC35u4U0z9is4K5pyD8ECiGPBUgNm6M3FnWd__UK2iorZg=s1024?authuser=1'
+        male: 'https://sdmntpreastus.oaiusercontent.com/files/00000000-1538-61f9-ab36-0b1ab9096b85/raw?se=2025-09-10T04%3A31%3A57Z&sp=r&sv=2024-08-04&sr=b&scid=41a6ebc4-569d-533e-830a-b28bb1688ad8&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-09T19%3A59%3A42Z&ske=2025-09-10T19%3A59%3A42Z&sks=b&skv=2024-08-04&sig=d785BY4Xr4xPkxx9%2BO%2BxJro3QRPNFStrwZW6gDJC4i4%3D',
+        female: 'https://sdmntpreastus.oaiusercontent.com/files/00000000-f66c-61f9-9fe7-a7ce9d781494/raw?se=2025-09-10T04%3A30%3A42Z&sp=r&sv=2024-08-04&sr=b&scid=fcaaa70a-b69b-5739-b43f-ba17212815f0&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-09T20%3A01%3A37Z&ske=2025-09-10T20%3A01%3A37Z&sks=b&skv=2024-08-04&sig=hOcdjTSCKGnfx7UUCxhWwI9ZFhA2yZAGanUZAJYld84%3D'
     };
     const RARITY_TIERS = {
         COMUM:    { multiplier: 1.0, className: 'rarity-COMUM', dropChance: 60 },
@@ -3055,5 +3052,4 @@
 
 </body>
 </html>
-
 
