@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundo Gangster</title>
+    <!-- Tailwind CSS para estilização rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts para uma fonte temática -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tone.js para efeitos sonoros -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <!-- Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, collection, increment, query, orderBy, limit, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase modules to the global window object
+        window.firebase = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            updateDoc,
+            arrayUnion,
+            arrayRemove,
+            onSnapshot,
+            collection,
+            increment,
+            query,
+            orderBy,
+            limit,
+            getDocs,
+            setLogLevel
+        };
+    </script>
+    <style>
+        /* Estilos personalizados e animações */
+        body {
+            font-family: 'Teko', sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-denim.png');
+        }
+
+        .game-container {
+            max-width: 1000px;
+            margin: auto;
+            border: 2px solid #444;
+            background-color: rgba(26, 26, 26, 0.95);
+            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .btn-game {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 4px solid #8c0000;
+            will-change: transform, filter, border-bottom-width;
+        }
+        .btn-game:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            border-bottom-width: 6px;
+        }
+        .btn-game:active:not(:disabled) {
+            transform: translateY(1px);
+            border-bottom-width: 2px;
+        }
+        .btn-game:disabled {
+            filter: grayscale(80%);
+            cursor: not-allowed;
+            border-bottom: 4px solid #444;
+        }
+        
+        .btn-stat { transition: all 0.2s ease; }
+        .btn-stat:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .progress-bar-container { background-color: #333; border-radius: 5px; overflow: hidden; border: 1px solid #555; }
+        .progress-bar { background: linear-gradient(90deg, #ffd700, #ffae00); height: 100%; transition: width 0.5s ease-in-out; }
+        .energy-bar { background: linear-gradient(90deg, #f5d442, #f5a623); height: 100%; transition: width 0.3s ease-in-out; }
+        .hp-bar { background: linear-gradient(90deg, #ff0000, #8b0000); height: 100%; transition: width 0.3s ease-in-out; }
+
+        /* Animações de Batalha e Feedback */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .shake { animation: shake 0.5s; }
+        
+        @keyframes screen-shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
+        .screen-shake { animation: screen-shake 0.2s; }
+
+        @keyframes damage-popup { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+        .damage-text { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 2.5rem; font-weight: bold; pointer-events: none; animation: damage-popup 1s forwards; text-shadow: 0 0 5px black; color: red; white-space: nowrap; z-index: 10; }
+        .damage-text.crit { color: yellow; font-size: 3rem; }
+        .damage-text.dodge { color: cyan; font-size: 2rem; }
+        .damage-text.heal { color: limegreen; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: #2d3748; padding: 2rem; border-radius: 0.5rem; border: 2px solid #4a5568; max-width: 90%; width: 500px; text-align: center; }
+
+        /* Telas e Abas */
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .shop-category { display: none; }
+        .shop-category.active { display: grid; }
+        .admin-creator { display: none; }
+        .admin-creator.active { display: block; }
+        
+        #screen-battle {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.pexels.com/photos/169647/pexels-photo-169647.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .tab-btn, .dist-btn { background-color: #4a5568; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+        .tab-btn.active, .dist-btn.active { background-color: #a0aec0; color: #1a202c; border-bottom: 4px solid #f56565; }
+        .dist-btn.active { border-color: #63b3ed; }
+
+        /* Correção da Imagem do Item */
+        .item-image { width: 100%; height: 128px; object-fit: contain; }
+        
+        textarea, select, input[type=text], input[type=number], input[type=checkbox] { background-color: #2d3748; border: 1px solid #4a5568; color: #eee; border-radius: 4px; padding: 8px; }
+        input[type=checkbox] { padding: 0; width: 1rem; height: 1rem; }
+        
+        /* Estilos de Raridade */
+        .rarity-COMUM { color: #48bb78; text-shadow: 0 0 2px #48bb78; }
+        .rarity-RARO { color: #4299e1; text-shadow: 0 0 4px #4299e1; }
+        .rarity-EPICO { color: #9f7aea; text-shadow: 0 0 6px #9f7aea; }
+        .rarity-LENDARIO { color: #ed8936; text-shadow: 0 0 8px #ed8936; }
+        .rarity-BLACKOUT { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de; }
+    </style>
+</head>
+<body class="p-4">
+
+    <div id="game-container" class="game-container rounded-lg p-4 md:p-8">
+
+        <!-- HEADER E STATS -->
+        <header class="mb-6 border-b-2 border-gray-700 pb-4">
+            <div id="event-banner" class="hidden text-center bg-yellow-500 text-black font-bold p-2 rounded-lg mb-4 text-xl"></div>
+            <div class="flex flex-wrap justify-between items-center">
+                <div class="w-full md:w-1/3 text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold text-red-500 uppercase tracking-wider">Mundo Gangster</h1>
+                     <div class="flex items-center gap-2 justify-center md:justify-start">
+                         <p id="player-name" class="text-2xl text-yellow-400">Nome do Jogador</p>
+                         <button onclick="promptToChangeName()" title="Alterar Nome" class="text-sm bg-gray-600 hover:bg-gray-500 p-1 rounded-full w-6 h-6 flex items-center justify-center"><i class="fas fa-pencil-alt"></i></button>
+                    </div>
+                </div>
+                <div class="w-full md:w-2/3 grid grid-cols-2 lg:grid-cols-4 gap-4 text-lg">
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-heart text-red-500"></i> HP: <span id="player-hp">100 / 100</span></div>
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-dollar-sign text-green-500"></i> Dinheiro: <span id="player-money">500</span></div>
+                    <div class="bg-gray-800 p-3 rounded-md">
+                        <div class="flex justify-between items-center">
+                            <span><i class="fas fa-bolt text-yellow-500"></i> Energia: <span id="player-energy">100 / 100</span></span>
+                            <button onclick="refillEnergy()" title="Recarregar Energia" class="bg-yellow-600 hover:bg-yellow-500 rounded-full w-6 h-6 font-bold text-sm">+</button>
+                        </div>
+                        <div id="energy-regen-timer" class="text-xs text-gray-400 text-center mt-1"></div>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-gem text-cyan-400"></i> Ouro: <span id="player-gold">10</span></div>
+
+                    <div class="bg-gray-800 p-3 rounded-md col-span-2 lg:col-span-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span><i class="fas fa-star text-yellow-500"></i> Nível: <span id="player-level">1</span></span>
+                            <span id="player-xp-text">0 / 100 XP</span>
+                        </div>
+                        <div class="progress-bar-container w-full h-4"><div id="player-xp-bar" class="progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="player-equipment" class="mt-4 text-center md:text-left text-xl text-gray-300 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div id="player-weapon"></div>
+                <div id="player-armor"></div>
+            </div>
+        </header>
+
+        <!-- NAVEGAÇÃO -->
+        <nav id="main-nav" class="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-2 mb-6">
+            <button onclick="showScreen('main')" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
+            <button onclick="showScreen('missions')" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
+            <button onclick="showScreen('achievements')" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
+            <button onclick="showScreen('inventory')" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
+            <button onclick="showScreen('enemies')" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
+            <button onclick="showScreen('bosses')" class="btn-game bg-red-900 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-crown"></i> Chefes</button>
+            <button onclick="showScreen('shop')" class="btn-game bg-green-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-store"></i> Loja</button>
+            <button onclick="showScreen('gang')" class="btn-game bg-indigo-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-users"></i> Gangue</button>
+            <button onclick="showScreen('leaderboard')" class="btn-game bg-teal-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Ranking</button>
+            <button onclick="showScreen('admin')" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
+        </nav>
+
+        <!-- CONTEÚDO -->
+        <main id="game-content">
+
+            <!-- TELA PRINCIPAL -->
+            <div id="screen-main" class="screen active p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel Principal</h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 text-center">
+                        <img id="player-avatar" src="" alt="Personagem" class="rounded-lg shadow-lg border-2 border-gray-600 mx-auto mb-4 w-full max-w-xs object-cover aspect-square">
+                        <div class="flex flex-col gap-2">
+                             <p class="text-lg">Escolha seu Avatar:</p>
+                             <div class="flex gap-2 justify-center">
+                                 <button onclick="setAvatar('male')" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Masculino</button>
+                                 <button onclick="setAvatar('female')" class="btn-game bg-pink-700 w-full p-2 rounded-md font-bold">Feminino</button>
+                             </div>
+                        </div>
+                         <div class="mt-4 flex gap-4 justify-center">
+                            <button onclick="saveGame()" class="btn-game bg-indigo-700 px-4 py-2 rounded-md"><i class="fas fa-save"></i> Salvar</button>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-2xl font-bold text-yellow-300">Atributos</h3>
+                        <p class="mb-2">Pontos para distribuir: <span id="skill-points" class="font-bold text-2xl text-green-400">0</span></p>
+                        <div class="flex justify-center gap-2 mb-4">
+                            <button onclick="setDistributionAmount(1)" class="dist-btn active p-2 rounded-md font-bold" data-amount="1">x1</button>
+                            <button onclick="setDistributionAmount(10)" class="dist-btn p-2 rounded-md font-bold" data-amount="10">x10</button>
+                            <button onclick="setDistributionAmount(100)" class="dist-btn p-2 rounded-md font-bold" data-amount="100">x100</button>
+                            <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
+                        </div>
+                        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
+                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
+                                    <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
+                                    <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
+                                    <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
+                                    <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
+                                </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
+                        <p id="mission-status" class="text-lg my-2">Nenhuma missão ativa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA DE MISSÕES -->
+            <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Missões</h2>
+                <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
+                <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            
+             <!-- TELA DE GANGUE -->
+            <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                 <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Território da Gangue</h2>
+                 <div id="gang-content" class="text-center">
+                     <!-- Conteúdo será renderizado via JS -->
+                 </div>
+            </div>
+
+            <!-- TELA DE RANKING -->
+            <div id="screen-leaderboard" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Líderes</h2>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button onclick="renderLeaderboard('level')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="level"><i class="fas fa-star"></i> Mais Poderosos</button>
+                    <button onclick="renderLeaderboard('totalMoneyEarned')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="totalMoneyEarned"><i class="fas fa-dollar-sign"></i> Mais Ricos</button>
+                    <button onclick="renderLeaderboard('gangs')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gangs"><i class="fas fa-users"></i> Gangues Mais Ricas</button>
+                </div>
+                <div id="leaderboard-list" class="space-y-2">
+                    <!-- Conteúdo do Ranking será renderizado aqui -->
+                </div>
+            </div>
+
+            <!-- TELA DE CONQUISTAS -->
+            <div id="screen-achievements" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Conquistas</h2><div id="achievements-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+            <!-- TELA DE INVENTÁRIO -->
+            <div id="screen-inventory" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Inventário e Refinamento</h2>
+                <div class="text-center mb-6 bg-gray-800 p-3 rounded-md">
+                    <p class="text-xl">Pedras de Refinamento: <span id="refinement-stones" class="font-bold text-2xl text-cyan-400">0</span></p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2">Arma Equipada</h3>
+                        <div id="equipped-weapon-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armas</h3>
+                        <div id="inventory-weapons-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2">Armadura Equipada</h3>
+                        <div id="equipped-armor-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armaduras</h3>
+                        <div id="inventory-armors-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- TELA DE INIMIGOS -->
+            <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Escolha seu Alvo</h2><div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+            <!-- TELA DE CHEFES -->
+            <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Covil dos Chefes</h2><div id="bosses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+            <!-- TELA DA LOJA -->
+            <div id="screen-shop" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Mercado Negro</h2>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="showShopCategory('weapons')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase active" data-category="weapons"><i class="fas fa-gun"></i> Armas</button>
+                    <button onclick="showShopCategory('armors')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="armors"><i class="fas fa-shield-alt"></i> Armaduras</button>
+                    <button onclick="showShopCategory('potions')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="potions"><i class="fas fa-flask"></i> Poções</button>
+                </div>
+                <div id="shop-weapons" class="shop-category active grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                <div id="shop-armors" class="shop-category grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                <div id="shop-potions" class="shop-category grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            </div>
+
+             <!-- TELA DE COMBATE -->
+            <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden"><h2 class="text-3xl font-bold mb-2 text-center text-red-500 uppercase">Combate!</h2><div class="flex flex-col md:flex-row justify-around items-center md:items-start text-center"><div class="w-full md:w-1/2 p-4 relative"><h3 id="battle-player-name" class="text-3xl font-bold text-yellow-400"></h3><img id="battle-player-img" src="" alt="Jogador" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-yellow-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-player-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-player-hp-text" class="text-lg mt-1"></p></div><div class="w-full md:w-1/2 p-4 relative"><h3 id="battle-enemy-name" class="text-3xl font-bold text-red-400"></h3><img id="battle-enemy-img" src="" alt="Inimigo" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-red-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-enemy-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-enemy-hp-text" class="text-lg mt-1"></p></div></div><div id="battle-controls" class="text-center"><button id="skip-battle-btn" onclick="skipBattle()" class="btn-game bg-gray-600 text-white font-bold py-2 px-6 text-xl rounded-lg uppercase">Pular Batalha <i class="fas fa-forward"></i></button></div><div id="battle-log" class="mt-4 p-2 bg-black bg-opacity-50 rounded h-32 overflow-y-auto text-center text-lg"></div></div>
+            
+            <!-- TELA ADMIN -->
+            <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel de Administração</h2>
+                
+                <div class="flex gap-2 mb-6">
+                    <button onclick="showAdminCreator('item-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="item-creator">Criar Itens</button>
+                    <button onclick="showAdminCreator('enemy-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="enemy-creator">Criar Inimigos</button>
+                    <button onclick="showAdminCreator('mission-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="mission-creator">Criar Missões</button>
+                    <button onclick="showAdminCreator('achievement-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="achievement-creator">Criar Conquistas</button>
+                    <button onclick="showAdminCreator('player-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="player-manager">Gerenciar Jogadores</button>
+                </div>
+
+                <!-- Admin Creator: Itens -->
+                <div id="admin-item-creator" class="admin-creator active">
+                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Itens</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-wrap gap-4 items-center mb-4">
+                            <div class="flex flex-col">
+                                <label for="admin-create-type">Tipo de Item</label>
+                                <select id="admin-create-type" onchange="toggleAdminCreatorUI()"></select>
+                            </div>
+                        </div>
+                        <!-- Common Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="flex flex-col"><label>Nome</label><input id="admin-create-name" type="text" placeholder="Nome do Item"></div>
+                            <div class="flex flex-col"><label>Preço Base (Nvl 1)</label><input id="admin-create-price" type="number" value="100"></div>
+                            <div class="flex flex-col"><label>URL da Imagem</label><input id="admin-create-image" type="text" placeholder="https://..."></div>
+                        </div>
+                        <!-- Weapon Specific Fields -->
+                        <div id="admin-creator-weapon-fields">
+                            <h4 class="text-xl font-bold mb-2">Atributos da Arma</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex flex-col"><label>Dano Base (Nvl 1)</label><input id="admin-create-baseDamage" type="number" value="10"></div>
+                            </div>
+                        </div>
+                        <!-- Armor Specific Fields -->
+                        <div id="admin-creator-armor-fields" class="hidden">
+                            <h4 class="text-xl font-bold mb-2">Atributos da Armadura</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <div class="flex flex-col"><label>Defesa</label><input id="admin-create-stat-defense" type="number" value="5"></div>
+                                <div class="flex flex-col"><label>HP Bônus</label><input id="admin-create-stat-hp" type="number" value="20"></div>
+                                <div class="flex flex-col"><label>Sorte</label><input id="admin-create-stat-luck" type="number" value="0"></div>
+                                <div class="flex flex-col"><label>Agilidade</label><input id="admin-create-stat-agility" type="number" value="0"></div>
+                            </div>
+                        </div>
+                        <!-- Ability Fields -->
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Habilidade Passiva (Opcional)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <div class="flex flex-col">
+                                    <label>Tipo</label>
+                                    <select id="admin-create-ability-type">
+                                        <option value="">Nenhuma</option>
+                                        <option value="lifesteal">Roubo de Vida</option>
+                                        <option value="invincibility">Invencibilidade</option>
+                                        <option value="stun">Atordoar</option>
+                                        <option value="armorBreak">Quebrar Armadura</option>
+                                        <option value="damageReflection">Refletir Dano</option>
+                                        <option value="lastStand">Último Suspiro</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col"><label>Chance (%)</label><input id="admin-create-ability-chance" type="number" value="25"></div>
+                                <div class="flex flex-col"><label>Valor / Duração</label><input id="admin-create-ability-value" type="number" value="0.5"></div>
+                                <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ability-desc" type="text" placeholder="Descrição da habilidade"></div>
+                            </div>
+                        </div>
+                        <button onclick="adminCreateItem()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar e Adicionar ao JSON</button>
+                    </div>
+                </div>
+                
+                <!-- Admin Creator: Inimigos/Chefes -->
+                <div id="admin-enemy-creator" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Inimigos/Chefes</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="flex flex-col"><label>Nome</label><input id="admin-create-enemy-name" type="text" placeholder="Nome do Inimigo"></div>
+                        <div class="flex flex-col"><label>HP</label><input id="admin-create-enemy-hp" type="number" value="100"></div>
+                        <div class="flex flex-col"><label>Ataque</label><input id="admin-create-enemy-attack" type="number" value="10"></div>
+                        <div class="flex flex-col"><label>Defesa</label><input id="admin-create-enemy-defense" type="number" value="5"></div>
+                        <div class="flex flex-col"><label>XP</label><input id="admin-create-enemy-xp" type="number" value="50"></div>
+                        <div class="flex flex-col"><label>Dinheiro</label><input id="admin-create-enemy-money" type="number" value="100"></div>
+                        <div class="flex flex-col col-span-2"><label>URL da Imagem</label><input id="admin-create-enemy-image" type="text" placeholder="https://..."></div>
+                        <div class="flex items-center gap-2"><label for="admin-create-enemy-isBoss">É um Chefe?</label><input id="admin-create-enemy-isBoss" type="checkbox"></div>
+                        <div class="col-span-full"><button onclick="adminCreateEnemy()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Inimigo/Chefe</button></div>
+                    </div>
+                </div>
+                
+                <!-- Admin Creator: Missões -->
+                <div id="admin-mission-creator" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Missões</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex flex-col"><label>Título</label><input id="admin-create-mission-title" type="text" placeholder="Título da Missão"></div>
+                        <div class="flex flex-col"><label>Alvo</label><select id="admin-create-mission-enemyId"></select></div>
+                        <div class="flex flex-col"><label>Quantidade</label><input id="admin-create-mission-count" type="number" value="5"></div>
+                        <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-mission-xp" type="number" value="100"></div>
+                        <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-mission-money" type="number" value="200"></div>
+                        <div class="col-span-full"><button onclick="adminCreateMission()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Missão</button></div>
+                    </div>
+                </div>
+
+                <!-- Admin Creator: Conquistas -->
+                <div id="admin-achievement-creator" class="admin-creator">
+                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Conquistas</h3>
+                     <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
+                         <div class="flex flex-col"><label>Nome</label><input id="admin-create-ach-name" type="text" placeholder="Nome da Conquista"></div>
+                         <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ach-desc" type="text" placeholder="Descrição"></div>
+                         <div class="flex flex-col"><label>Ícone (Font Awesome)</label><input id="admin-create-ach-icon" type="text" value="fa-star"></div>
+                         <div class="flex flex-col"><label>Tipo de Objetivo</label><select id="admin-create-ach-goal-type"></select></div>
+                         <div class="flex flex-col"><label>Estatística</label><select id="admin-create-ach-goal-stat"></select></div>
+                         <div class="flex flex-col"><label>Valor do Objetivo</label><input id="admin-create-ach-goal-value" type="number" value="100"></div>
+                         <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-ach-reward-xp" type="number" value="100"></div>
+                         <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-ach-reward-money" type="number" value="500"></div>
+                          <div class="flex flex-col"><label>Recompensa (Pedras)</label><input id="admin-create-ach-reward-stones" type="number" value="0"></div>
+                          <div class="flex flex-col"><label>Recompensa (Pontos)</label><input id="admin-create-ach-reward-sp" type="number" value="0"></div>
+                         <div class="col-span-full"><button onclick="adminCreateAchievement()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Conquista</button></div>
+                    </div>
+                </div>
+
+                <!-- Admin Creator: Player Manager -->
+                <div id="admin-player-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Jogadores</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col mb-4">
+                            <label for="admin-player-select">Selecionar Jogador</label>
+                            <select id="admin-player-select" onchange="adminLoadPlayerData(this.value)">
+                                <option value="">-- Carregando jogadores... --</option>
+                            </select>
+                        </div>
+
+                        <div id="admin-player-edit-form" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="hidden" id="admin-selected-player-id">
+                            <div class="flex flex-col"><label>Nome</label><input id="admin-edit-player-name" type="text" readonly class="bg-gray-700"></div>
+                            <div class="flex flex-col"><label>Dinheiro</label><input id="admin-edit-player-money" type="number"></div>
+                            <div class="flex flex-col"><label>Ouro</label><input id="admin-edit-player-gold" type="number"></div>
+                            <div class="flex flex-col"><label>XP</label><input id="admin-edit-player-xp" type="number"></div>
+                            <div class="flex flex-col"><label>Nível</label><input id="admin-edit-player-level" type="number"></div>
+                            <div class="flex flex-col"><label>Pontos de Skill</label><input id="admin-edit-player-skillPoints" type="number"></div>
+                            <div class="flex flex-col"><label>Ataque Base</label><input id="admin-edit-player-baseAttack" type="number"></div>
+                            <div class="flex flex-col"><label>Defesa</label><input id="admin-edit-player-defense" type="number"></div>
+                            <div class="flex flex-col"><label>Sorte</label><input id="admin-edit-player-luck" type="number"></div>
+                            <div class="flex flex-col"><label>Agilidade</label><input id="admin-edit-player-agility" type="number"></div>
+                            <div class="col-span-full mt-4">
+                                <button onclick="adminSaveChangesToPlayer()" class="btn-game bg-green-700 px-4 py-2 rounded-md">Salvar Alterações</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-8 mt-8">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Editor de Dados (JSON)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Itens (Armas, Armaduras, Poções)</h4>
+                            <textarea id="admin-items" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Jogabilidade (Inimigos, Missões, etc.)</h4>
+                            <textarea id="admin-gameplay" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="saveAdminData()" class="btn-game bg-green-700 px-4 py-2 rounded-md"><i class="fas fa-save"></i> Salvar Dados</button>
+                        <button onclick="loadAdminData(true)" class="btn-game bg-blue-700 px-4 py-2 rounded-md"><i class="fas fa-sync"></i> Recarregar Dados</button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Adicionar Itens ao Inventário</h3>
+                    <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col">
+                            <label>Tipo</label>
+                            <select id="admin-item-type" onchange="updateAdminItemSelector()"></select>
+                        </div>
+                        <div class="flex flex-col">
+                            <label>Item</label>
+                            <select id="admin-item-select"></select>
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Quantidade</label>
+                            <input id="admin-item-quantity" type="number" value="1" min="1" class="w-24">
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Raridade</label>
+                            <select id="admin-item-rarity"></select>
+                        </div>
+                        <button onclick="adminAddItem()" class="btn-game bg-purple-700 px-4 py-2 rounded-md self-end">Adicionar</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controles do Jogo</h3>
+                     <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col">
+                            <label>XP</label>
+                            <input id="admin-add-xp" type="number" value="100" min="0" class="w-32">
+                        </div>
+                        <div class="flex flex-col">
+                            <label>Dinheiro</label>
+                            <input id="admin-add-money" type="number" value="500" min="0" class="w-32">
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Ouro</label>
+                            <input id="admin-add-gold" type="number" value="10" min="0" class="w-32">
+                        </div>
+                        <button onclick="adminAddResources()" class="btn-game bg-green-700 px-4 py-2 rounded-md self-end">Adicionar Recursos</button>
+                        <button onclick="adminResetBossCooldowns()" class="btn-game bg-red-800 px-4 py-2 rounded-md self-end">Resetar Cooldowns dos Chefes</button>
+                    </div>
+                </div>
+                 <div class="mt-8">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controle de Eventos Globais</h3>
+                    <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <label for="admin-event-doubleXp" class="text-lg">Ativar Evento de XP em Dobro?</label>
+                            <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
+                        </div>
+                        <button onclick="adminUpdateEvents()" class="btn-game bg-orange-700 px-4 py-2 rounded-md self-end">Atualizar Eventos</button>
+                    </div>
+                 </div>
+            </div>
+
+        </main>
+
+        <!-- MODAL GENÉRICO -->
+        <div id="game-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 id="modal-title" class="text-3xl font-bold mb-4 text-yellow-300"></h2>
+                <div id="modal-body" class="text-lg mb-6"></div>
+                <button id="modal-close-btn" class="btn-game bg-red-700 px-6 py-2 rounded-md font-bold uppercase">Fechar</button>
+            </div>
+        </div>
+
+        <!-- Toast de Notificação -->
+        <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+    </div>
+
+    <script>
+    // --- CONSTANTES DE JOGO ---
+    const PATROL_MONEY_PER_MINUTE = 10;
+    const PATROL_XP_PER_MINUTE = 5;
+    const PATROL_STONES_PER_HOUR_CHANCE = 50; // 50% de chance de ganhar 1 pedra por hora
+    const PATROL_EQUIPMENT_PER_HOUR_CHANCE = 20; // 20% de chance de ganhar 1 equipamento por hora
+    const MAX_PATROL_MINUTES = 8 * 60; // Máximo de 8 horas de recompensa
+    const WEAPON_DAMAGE_PERCENT_PER_LEVEL = 0.05; // 5% de bônus de dano por nível de refinamento
+    const ARMOR_STAT_PERCENT_PER_LEVEL = 0.05;    // 5% de bônus de status por nível de refinamento
+    const MAX_REFINE_LEVEL = 12;
+    const ENERGY_REGEN_SECONDS_PER_POINT = 300; // 5 minutos
+    const ENERGY_COST_PER_FIGHT = 10;
+    const GOLD_COST_REFILL_ENERGY = 5;
+    const AVATARS = {
+        male: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KSDM7XIXe-zSkq3rF8O88JbBuaKw0Rj34EzIiE68Kg2LUs5yq0bzEDcDJ3Nj0XBxBAWlu9IrrQoQT8ER-4Z1DYrY13EUtKNcFmBV9ir_ROgXdrenNwDOtHMjCOI5p3jmYcO0af0oEw9XD48pMuQwbnpWn2By9-h0Cox9gB1pNBpGBdV=s1024?authuser=1',
+        female: 'https://lh3.googleusercontent.com/gg-dl/AJfQ9KRQCa7yEhbvJHINQ-wLSvFxi0mpSLPYZi07X03PwZL5K832IV-aCs_9gw94hf-WYoITSrZ6RZjsZ-f6TzQiXfjExamta1KWcjDFuWo1hN73SqRuveat7P8Mpd1ZonpFx6IdWC35u4U0z9is4K5pyD8ECiGPBUgNm6M3FnWd__UK2iorZg=s1024?authuser=1'
+    };
+    const RARITY_TIERS = {
+        COMUM:    { multiplier: 1.0, className: 'rarity-COMUM', dropChance: 60 },
+        RARO:     { multiplier: 1.2, className: 'rarity-RARO', dropChance: 25 },
+        EPICO:    { multiplier: 1.5, className: 'rarity-EPICO', dropChance: 10 },
+        LENDARIO: { multiplier: 2.0, className: 'rarity-LENDARIO', dropChance: 4 },
+        BLACKOUT: { multiplier: 2.5, className: 'rarity-BLACKOUT', dropChance: 1 }
+    };
+
+    // --- ESTADO INICIAL DO JOGO ---
+    let player = {};
+
+    function getInitialPlayerState() {
+        return {
+            name: "Novo Gangster", level: 1, hp: 100, maxHp: 100, money: 500, gold: 10,
+            energy: 100, maxEnergy: 100, lastEnergyRegenTime: null,
+            xp: 0, xpToNextLevel: 100, baseAttack: 5, skillPoints: 0,
+            stats: { 
+                defense: 0, luck: 1, agility: 1,
+                enemiesKilled: 0, totalMoneyEarned: 500, highestRefine: 0,
+                totalPatrolTime: 0
+            },
+            weapon: { id: 0, name: "Punhos", baseDamage: 2, price: 0, image: "https://placehold.co/200x200/222222/888888?text=Punhos", refineLevel: 0, instanceId: -1, rarity: "COMUM" },
+            armor: { id: 0, name: "Roupas Velhas", price: 0, image: "https://placehold.co/200x200/222222/888888?text=Roupas", stats: { defense: 0, hp: 0, luck: 0, agility: 0 }, refineLevel: 0, instanceId: -1, rarity: "COMUM" },
+            inventory: { weapons: [], armors: [], consumables: { refinementStones: 10 } },
+            avatar: AVATARS.male,
+            activeMission: null, missionProgress: {}, statusEffects: {},
+            itemInstanceCounter: 0,
+            dailyReward: { lastLoginDate: null, loginStreak: 0 },
+            achievements: [],
+            offlinePatrol: { active: false, startTime: null },
+            bossCooldowns: {},
+            gangId: null
+        };
+    }
+
+    // --- DADOS DO JOGO ---
+    let weapons = [];
+    let armors = [];
+    let potions = [];
+    let enemies = [];
+    let bosses = [];
+    let missions = [];
+    let achievements = [];
+    
+    const dailyRewards = [
+        { money: 200, xp: 50 }, { money: 400, xp: 100 }, { money: 600, xp: 150, stones: 1 },
+        { money: 800, xp: 200 }, { money: 1000, xp: 250, stones: 2 }, { money: 1500, xp: 300 },
+        { money: 2500, xp: 500, stones: 5, gold: 1 }
+    ];
+
+    let currentEnemy = null;
+    let isBattleInProgress = false;
+    let battleTimeoutId = null;
+    let distributionAmount = 1;
+    let patrolIntervalId = null;
+    let energyIntervalId = null;
+    let gameEvents = {}; 
+    let currentShopStock = null;
+
+    // Firebase
+    let db, auth, userId;
+    let gangUnsubscribe = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+
+    // --- GERENCIADOR DE SOM ---
+    const soundManager = {
+        isMuted: false, synths: {},
+        init() {
+            this.synths.attack = new Tone.Synth({ oscillator: { type: "fmsine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.hit = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+            this.synths.crit = new Tone.Synth({ oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            this.synths.levelUp = new Tone.PolySynth(Tone.Synth).toDestination();
+            this.synths.buy = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.refineSuccess = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.refineFail = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } }).toDestination();
+        },
+        play(sound) {
+            if (this.isMuted || !this.synths[sound]) return;
+            try {
+                if(Tone.context.state !== 'running') { Tone.start(); }
+                switch (sound) {
+                    case 'attack': this.synths.attack.triggerAttackRelease("C2", "8n"); break;
+                    case 'hit': this.synths.hit.triggerAttackRelease("8n"); break;
+                    case 'crit': this.synths.crit.triggerAttackRelease("G4", "8n"); break;
+                    case 'levelUp': this.synths.levelUp.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n"); break;
+                    case 'buy': this.synths.buy.triggerAttackRelease("C5", "8n"); break;
+                    case 'refineSuccess': this.synths.refineSuccess.triggerAttackRelease("E5", "8n"); break;
+                    case 'refineFail': this.synths.refineFail.triggerAttackRelease("C3", "4n"); break;
+                }
+            } catch (e) { console.error("Sound error:", e); }
+        }
+    };
+
+
+    // --- FUNÇÕES DE UI E NAVEGAÇÃO ---
+    function showScreen(screenId) {
+        if (isBattleInProgress && screenId !== 'battle') return;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const screenElement = document.getElementById(`screen-${screenId}`);
+        if (screenElement) screenElement.classList.add('active');
+        
+        const mainNav = document.getElementById('main-nav');
+        if(mainNav) mainNav.style.display = (screenId === 'battle') ? 'none' : 'grid';
+
+        if (screenId !== 'missions' && patrolIntervalId) {
+            clearInterval(patrolIntervalId);
+            patrolIntervalId = null;
+        }
+
+        if (screenId === 'inventory') renderInventory();
+        if (screenId === 'admin') { populateAdminSelectors(); showAdminCreator('item-creator'); loadAdminEventStatus(); adminRenderPlayerManager(); }
+        if (screenId === 'enemies') renderEnemies();
+        if (screenId === 'bosses') renderBosses();
+        if (screenId === 'shop') { generateShopStock(); renderShop(); }
+        if (screenId === 'missions') renderMissions();
+        if (screenId === 'achievements') renderAchievements();
+        if (screenId === 'gang') renderGangScreen();
+        if (screenId === 'leaderboard') renderLeaderboard('level');
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none' }, 3000);
+    }
+
+    function showModal(title, content, onClose = null) {
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modal = document.getElementById('game-modal');
+        const closeBtn = document.getElementById('modal-close-btn');
+
+        if (!modal || !modalTitle || !modalBody || !closeBtn) return;
+        
+        modalTitle.innerHTML = title;
+        modalBody.innerHTML = content;
+        modal.classList.remove('hidden');
+        closeBtn.classList.remove('hidden');
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            if (onClose) onClose();
+            closeBtn.removeEventListener('click', closeModal);
+        };
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    function setAvatar(gender) {
+        if (AVATARS[gender]) {
+            player.avatar = AVATARS[gender];
+            updateUI();
+            showToast("Avatar atualizado!");
+        }
+    }
+
+    function showShopCategory(category) {
+        document.querySelectorAll('.shop-category').forEach(el => el.classList.remove('active'));
+        document.getElementById(`shop-${category}`).classList.add('active');
+        document.querySelectorAll('#screen-shop .tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelector(`#screen-shop .tab-btn[data-category="${category}"]`).classList.add('active');
+    }
+
+     function showAdminCreator(category) {
+        document.querySelectorAll('.admin-creator').forEach(el => el.classList.remove('active'));
+        document.getElementById(`admin-${category}`).classList.add('active');
+        document.querySelectorAll('#screen-admin .tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelector(`#screen-admin .tab-btn[data-category="${category}"]`).classList.add('active');
+     }
+    
+    function triggerScreenShake() {
+        const container = document.getElementById('game-container');
+        container.classList.add('screen-shake');
+        setTimeout(() => container.classList.remove('screen-shake'), 200);
+    }
+
+    // --- CÁLCULOS DO JOGO ---
+    function getRandomRarity() {
+        const rand = Math.random() * 100;
+        let cumulativeChance = 0;
+        for (const rarity in RARITY_TIERS) {
+            cumulativeChance += RARITY_TIERS[rarity].dropChance;
+            if (rand < cumulativeChance) {
+                return rarity;
+            }
+        }
+        return 'COMUM';
+    }
+
+    function applyRarityToItem(item, rarity) {
+        const newItem = JSON.parse(JSON.stringify(item));
+        newItem.rarity = rarity;
+        const multiplier = RARITY_TIERS[rarity].multiplier;
+        if (newItem.hasOwnProperty('baseDamage')) {
+            newItem.baseDamage = Math.round(newItem.baseDamage * multiplier);
+        }
+        if (newItem.stats) {
+            Object.keys(newItem.stats).forEach(key => {
+                newItem.stats[key] = Math.round((newItem.stats[key] || 0) * multiplier);
+            });
+        }
+        return newItem;
+    }
+
+    function getScaledItem(template, level) {
+        const scaledItem = JSON.parse(JSON.stringify(template));
+        const levelMultiplier = 1 + (level - 1) * 0.15;
+        
+        scaledItem.level = level;
+
+        if(scaledItem.hasOwnProperty('baseDamage')) {
+            scaledItem.baseDamage = Math.round(scaledItem.baseDamage * levelMultiplier);
+        }
+        if(scaledItem.stats) {
+            scaledItem.stats.defense = Math.round((scaledItem.stats.defense || 0) * levelMultiplier);
+            scaledItem.stats.hp = Math.round((scaledItem.stats.hp || 0) * levelMultiplier);
+        }
+
+        return scaledItem;
+    }
+
+    function getScaledEnemy(template, level) {
+        const scaledEnemy = JSON.parse(JSON.stringify(template));
+        const levelMultiplier = 1 + (level - 1) * 0.2;
+        
+        scaledEnemy.level = level;
+        scaledEnemy.hp = Math.round(scaledEnemy.hp * levelMultiplier);
+        scaledEnemy.attack = Math.round(scaledEnemy.attack * levelMultiplier);
+        scaledEnemy.defense = Math.round((scaledEnemy.defense || 0) * levelMultiplier);
+        scaledEnemy.xp = Math.round(scaledEnemy.xp * (1 + (level - 1) * 0.1));
+        scaledEnemy.money = Math.round(scaledEnemy.money * (1 + (level - 1) * 0.1));
+
+        return scaledEnemy;
+    }
+
+    function getScaledMission(template, level) {
+        const scaledMission = JSON.parse(JSON.stringify(template));
+        const levelMultiplier = 1 + (level - 1) * 0.2;
+        
+        scaledMission.goal.count = Math.max(1, Math.round(scaledMission.goal.count + Math.floor((level-1) / 5)));
+        scaledMission.reward.xp = Math.round(scaledMission.reward.xp * levelMultiplier);
+        scaledMission.reward.money = Math.round(scaledMission.reward.money * levelMultiplier);
+        
+        const enemyName = [...enemies, ...bosses].find(e => e.id === scaledMission.goal.enemyId)?.name || 'inimigos';
+        scaledMission.description = `Derrote ${scaledMission.goal.count} ${enemyName}.`;
+        
+        return scaledMission;
+    }
+
+    function getTotalWeaponDamage(weapon) {
+        const baseDamage = weapon.baseDamage || 0;
+        const refineLevel = weapon.refineLevel || 0;
+        const bonusDamage = Math.round(baseDamage * refineLevel * WEAPON_DAMAGE_PERCENT_PER_LEVEL);
+        return baseDamage + bonusDamage;
+    }
+
+    function getTotalArmorStats(armor) {
+        const refineLevel = armor.refineLevel || 0;
+        const baseStats = armor.stats || { defense: 0, hp: 0, luck: 0, agility: 0 };
+        const bonusDef = Math.round(baseStats.defense * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+        const bonusHp = Math.round(baseStats.hp * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+        return {
+            defense: baseStats.defense + bonusDef,
+            hp: baseStats.hp + bonusHp,
+            luck: (armor.stats.luck || 0),
+            agility: (armor.stats.agility || 0)
+        }
+    }
+
+    function getPlayerTotalStats() {
+        if (!player || !player.armor) return { maxHp: 100, defense: 0, luck: 1, agility: 1 };
+        const totalArmorStats = getTotalArmorStats(player.armor);
+        return {
+            maxHp: 100 + totalArmorStats.hp,
+            defense: (player.stats.defense || 0) + totalArmorStats.defense,
+            luck: (player.stats.luck || 1) + totalArmorStats.luck,
+            agility: (player.stats.agility || 1) + totalArmorStats.agility
+        };
+    }
+
+    function getItemNameWithRarity(item) {
+        if (!item) return '';
+        const refineLevel = item.refineLevel || 0;
+        const rarity = item.rarity || 'COMUM';
+        const itemLevel = item.level || 1;
+        const rarityClass = RARITY_TIERS[rarity]?.className || '';
+        const levelText = item.id !== 0 ? `[Nvl ${itemLevel}] ` : '';
+        const itemName = levelText + item.name + (refineLevel > 0 ? ` +${refineLevel}` : '');
+        return `<span class="${rarityClass}">${itemName}</span>`;
+    }
+
+    function updateUI() {
+        if (!player || Object.keys(player).length === 0) return;
+        const totalStats = getPlayerTotalStats();
+        player.maxHp = totalStats.maxHp + (20 * (player.level - 1));
+
+        document.getElementById('player-name').innerText = player.name;
+        document.getElementById('player-hp').innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+        document.getElementById('player-money').innerText = player.money.toLocaleString();
+        document.getElementById('player-gold').innerText = player.gold.toLocaleString();
+        document.getElementById('player-energy').innerText = `${Math.floor(player.energy)} / ${player.maxEnergy}`;
+        document.getElementById('player-level').innerText = player.level;
+        document.getElementById('player-xp-text').innerText = `${player.xp} / ${player.xpToNextLevel} XP`;
+        document.getElementById('player-avatar').src = player.avatar;
+        document.getElementById('player-xp-bar').style.width = `${(player.xp / player.xpToNextLevel) * 100}%`;
+        
+        const totalWeaponDamage = getTotalWeaponDamage(player.weapon);
+        const totalArmorDefense = getTotalArmorStats(player.armor).defense;
+        
+        document.getElementById('player-weapon').innerHTML = `<i class="fas fa-gun"></i> Arma: <strong>${getItemNameWithRarity(player.weapon)}</strong> (+${totalWeaponDamage} Dano)`;
+        document.getElementById('player-armor').innerHTML = `<i class="fas fa-shield-alt"></i> Armadura: <strong>${getItemNameWithRarity(player.armor)}</strong> (+${totalArmorDefense} Def)`;
+        
+        document.getElementById('skill-points').innerText = player.skillPoints;
+        document.getElementById('stat-attack').innerText = player.baseAttack;
+        document.getElementById('stat-defense').innerText = totalStats.defense;
+        document.getElementById('stat-luck').innerText = totalStats.luck;
+        document.getElementById('stat-agility').innerText = totalStats.agility;
+
+        document.querySelectorAll('.btn-stat').forEach(btn => btn.disabled = player.skillPoints <= 0);
+
+        if (player.activeMission) {
+            const mission = player.activeMission;
+            const enemy = [...enemies, ...bosses].find(e => e.id === mission.goal.enemyId);
+            const progress = player.missionProgress[mission.goal.enemyId] || 0;
+            document.getElementById('mission-status').innerHTML = `<strong>${mission.title}</strong><br>Progresso: Derrotar ${enemy.name} (${progress}/${mission.goal.count})`;
+        } else {
+             document.getElementById('mission-status').innerText = "Nenhuma missão ativa.";
+        }
+    }
+
+    // --- RENDERIZAÇÃO DE CONTEÚDO DINÂMICO ---
+    function generateShopStock() {
+        if (currentShopStock) return;
+
+        currentShopStock = { weapons: [], armors: [] };
+        const playerLevel = player.level;
+        
+        const itemPool = [...weapons, ...armors];
+
+        itemPool.forEach(template => {
+            const item = getScaledItem(template, playerLevel);
+            const rarity = getRandomRarity();
+            const finalItem = applyRarityToItem(item, rarity);
+            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`; // Unique ID
+
+            if (rarity === 'LENDARIO' || rarity === 'BLACKOUT') {
+                finalItem.goldPrice = Math.ceil(finalItem.price / 150);
+            }
+
+            if (finalItem.hasOwnProperty('baseDamage')) {
+                currentShopStock.weapons.push(finalItem);
+            } else {
+                currentShopStock.armors.push(finalItem);
+            }
+        });
+    }
+
+    function renderShop() {
+        document.getElementById('shop-weapons').innerHTML = currentShopStock.weapons
+            .map(item => createItemCard(item, 'weapon')).join('');
+        document.getElementById('shop-armors').innerHTML = currentShopStock.armors
+            .map(item => createItemCard(item, 'armor')).join('');
+        document.getElementById('shop-potions').innerHTML = potions.map(item => createItemCard(item, 'potion')).join('');
+    }
+    
+    function createItemCard(item, type) {
+        let statsHtml = '';
+        let priceHtml = '';
+        let buttonAction = `buyItem('${type}', '${item.shopId || item.id}')`;
+
+        if (type === 'potion') {
+            buttonAction = `buyItem('${type}', ${item.id})`;
+        }
+
+        if (item.goldPrice) {
+            priceHtml = `<p class="text-cyan-400 text-lg"><i class="fas fa-gem"></i> ${item.goldPrice}</p>`;
+        } else {
+            priceHtml = `<p class="text-green-400 text-lg">$${item.price.toLocaleString()}</p>`;
+        }
+
+        if (type === 'weapon') {
+            statsHtml = `<p class="text-red-400">Dano Base: +${item.baseDamage}</p>`;
+            if (item.ability) {
+                statsHtml += `<p class="text-cyan-400 mt-2 text-sm"><i class="fas fa-star"></i> ${item.ability.description}</p>`;
+            }
+        } else if (type === 'armor') {
+            statsHtml = Object.entries(item.stats).filter(([, v]) => v !== 0).map(([k, v]) => `<p class="text-blue-300 capitalize">${k}: ${v > 0 ? '+' : ''}${v}</p>`).join('');
+             if (item.ability) {
+                statsHtml += `<p class="text-cyan-400 mt-2 text-sm"><i class="fas fa-star"></i> ${item.ability.description}</p>`;
+            }
+        } else if (type === 'potion') {
+            statsHtml = `<p class="text-purple-400 capitalize">Efeito: +${item.effect.value} ${item.effect.stat.replace('baseAttack', 'Ataque')}</p>`;
+            priceHtml = `<p class="text-green-400 text-lg">$${item.price.toLocaleString()}</p>`;
+        }
+
+        return `
+            <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-gray-700 flex flex-col justify-between">
+                <div>
+                    <img src="${item.image}" alt="${item.name}" class="item-image rounded-md mb-2 mx-auto">
+                    <h3 class="text-xl font-bold ${RARITY_TIERS[item.rarity]?.className || ''}">${item.name}</h3>
+                    ${priceHtml}
+                    <div class="h-16">${statsHtml}</div>
+                </div>
+                <button onclick="${buttonAction}" class="mt-2 btn-game bg-green-700 w-full p-2 rounded-md font-bold">${type === 'potion' ? 'Usar' : 'Comprar'}</button>
+            </div>
+        `;
+    }
+
+    function renderInventory() {
+        document.getElementById('refinement-stones').innerText = player.inventory.consumables.refinementStones.toLocaleString();
+        document.getElementById('equipped-weapon-card').innerHTML = createEquippedCard(player.weapon, 'weapon');
+        document.getElementById('inventory-weapons-list').innerHTML = player.inventory.weapons.map(w => createInventoryCard(w, 'weapon')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
+
+        document.getElementById('equipped-armor-card').innerHTML = createEquippedCard(player.armor, 'armor');
+        document.getElementById('inventory-armors-list').innerHTML = player.inventory.armors.map(a => createInventoryCard(a, 'armor')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
+    }
+
+    function createEquippedCard(item, type) {
+        let statsHtml = '';
+        let itemName = getItemNameWithRarity(item);
+        
+        if (type === 'weapon') {
+            const baseDamage = item.baseDamage || 0;
+            const bonusDamage = Math.round(baseDamage * (item.refineLevel || 0) * WEAPON_DAMAGE_PERCENT_PER_LEVEL);
+            statsHtml = `<p class="text-red-400">Dano: ${baseDamage} (+${bonusDamage})</p>`;
+             if (item.ability) statsHtml += `<p class="text-cyan-400 text-sm mt-1">${item.ability.description}</p>`;
+        } else {
+            const totalStats = getTotalArmorStats(item);
+            const baseStats = item.stats;
+            const bonusDef = totalStats.defense - baseStats.defense;
+            const bonusHp = totalStats.hp - baseStats.hp;
+
+            statsHtml = `<p class="text-blue-400">Defesa: ${baseStats.defense} (+${bonusDef}) | HP: ${baseStats.hp} (+${bonusHp})</p>`;
+             if (item.ability) statsHtml += `<p class="text-cyan-400 text-sm mt-1">${item.ability.description}</p>`;
+        }
+        
+        const nextLevel = (item.refineLevel || 0) + 1;
+        const cost = nextLevel;
+        const successChance = Math.max(0, 100 - ((item.refineLevel || 0) * 7));
+        const refineDetails = `<div class="mt-2 text-sm text-center">
+                                     <p>Custo: ${cost} Pedra(s) | Chance: ${successChance}%</p>
+                                   </div>`;
+        
+        const refineButton = item.id !== 0 && (item.refineLevel || 0) < MAX_REFINE_LEVEL
+            ? `<button onclick="refineItem('${type}')" class="btn-game bg-cyan-700 w-full p-2 rounded-md font-bold text-sm">Refinar para +${nextLevel}</button>` 
+            : (item.id !== 0 ? `<p class='mt-3 text-center text-yellow-400'>Nível Máximo</p>` : '');
+
+        const unequipButton = item.id !== 0 
+            ? `<button onclick="unequipItem('${type}')" class="btn-game bg-gray-600 w-full p-2 rounded-md font-bold text-sm">Desequipar</button>`
+            : '';
+
+        return `
+            <div class="flex items-center gap-4">
+                <img src="${item.image}" alt="${item.name}" class="w-32 h-32 object-contain rounded-md">
+                <div>
+                    <h4 class="text-xl font-bold">${itemName}</h4>
+                    ${statsHtml}
+                </div>
+            </div>
+            <div class="mt-2 flex flex-col gap-2">
+                ${refineDetails}
+                <div class="flex gap-2">
+                    ${refineButton}
+                    ${unequipButton}
+                </div>
+            </div>
+        `;
+    }
+
+    function createInventoryCard(item, type) {
+        let statsHtml = '';
+        let itemName = getItemNameWithRarity(item);
+        const equippedItem = player[type];
+
+        const getStatColorClass = (inventoryStat, equippedStat) => {
+            if (inventoryStat > equippedStat) return 'text-green-400';
+            if (inventoryStat < equippedStat) return 'text-red-400';
+            return 'text-gray-400';
+        };
+
+        if (type === 'weapon') {
+            const totalDamage = getTotalWeaponDamage(item);
+            const equippedDamage = getTotalWeaponDamage(equippedItem);
+            const colorClass = getStatColorClass(totalDamage, equippedDamage);
+            statsHtml = `<p class="text-sm">Dano Total: <strong class="${colorClass}">${totalDamage}</strong></p>`;
+        } else { // armor
+            const totalStats = getTotalArmorStats(item);
+            const equippedStats = getTotalArmorStats(equippedItem);
+            
+            const defColorClass = getStatColorClass(totalStats.defense, equippedStats.defense);
+            const hpColorClass = getStatColorClass(totalStats.hp, equippedStats.hp);
+
+            statsHtml = `<p class="text-sm">Def: <strong class="${defColorClass}">${totalStats.defense}</strong> | HP: <strong class="${hpColorClass}">${totalStats.hp}</strong></p>`;
+        }
+        
+        if (item.ability) {
+            statsHtml += `<p class="text-cyan-400 text-xs mt-1">${item.ability.description}</p>`;
+        }
+
+        const templateList = type === 'weapon' ? weapons : armors;
+        const itemTemplate = templateList.find(t => t.id === item.id);
+        const sellPrice = Math.round((itemTemplate?.price || 0) * 0.25);
+
+
+        return `
+            <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-gray-700 flex flex-col justify-between">
+                <div>
+                    <img src="${item.image}" alt="${item.name}" class="item-image h-24 rounded-md mb-2 mx-auto">
+                    <h3 class="text-lg font-bold">${itemName}</h3>
+                    <div class="h-16 mt-2 text-center flex flex-col justify-center">${statsHtml}</div>
+                </div>
+                <div class="mt-2 flex gap-2">
+                    <button onclick="equipItem('${type}', ${item.instanceId})" class="btn-game bg-purple-700 w-full p-2 rounded-md font-bold text-sm">Equipar</button>
+                    <button onclick="sellItem('${type}', ${item.instanceId})" class="btn-game bg-green-700 w-full p-2 rounded-md font-bold text-sm">Vender ($${sellPrice.toLocaleString()})</button>
+                </div>
+            </div>`;
+    }
+
+    function renderMissions() {
+        const container = document.getElementById('missions-list');
+        container.innerHTML = '';
+        
+        renderOfflinePatrol();
+
+        missions.forEach(m => {
+            const scaledMission = getScaledMission(m, player.level);
+            let isDisabled = player.activeMission ? 'disabled' : '';
+            if (player.offlinePatrol.active) isDisabled = 'disabled';
+
+            const isCurrentMission = player.activeMission && player.activeMission.id === m.id;
+            
+            let buttonHtml = `<button onclick="startMission(${m.id})" class="mt-2 btn-game ${isDisabled ? 'bg-gray-500' : 'bg-blue-700'} w-full p-2 rounded-md font-bold" ${isDisabled}>${isCurrentMission ? 'EM ANDAMENTO' : 'ACEITAR'}</button>`;
+            
+            if (isCurrentMission) {
+                buttonHtml += `<button onclick="abandonMission()" class="mt-2 btn-game bg-red-800 w-full p-2 rounded-md font-bold text-sm">Abandonar</button>`;
+            }
+
+            container.innerHTML += `
+                <div class="bg-gray-800 p-4 rounded-lg border-2 border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300">${scaledMission.title}</h3>
+                        <p class="my-2">${scaledMission.description}</p>
+                        <p class="text-green-400"><strong>Recompensa:</strong> ${scaledMission.reward.money.toLocaleString()}$ e ${scaledMission.reward.xp.toLocaleString()} XP</p>
+                    </div>
+                    <div class="mt-2">${buttonHtml}</div>
+                </div>`;
+        });
+    }
+
+    function renderEnemies() {
+        const container = document.getElementById('enemies-list');
+        container.innerHTML = '';
+        
+        const enemyLevels = [
+            Math.max(1, player.level - 1),
+            player.level,
+            Math.max(1, player.level + 2)
+        ];
+
+        const availableTemplates = [...enemies];
+
+        enemyLevels.forEach(level => {
+            if (availableTemplates.length === 0) return;
+
+            const templateIndex = Math.floor(Math.random() * availableTemplates.length);
+            const template = availableTemplates.splice(templateIndex, 1)[0];
+            const e = getScaledEnemy(template, level);
+
+            container.innerHTML += `
+                <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-gray-700">
+                    <img src="${e.image}" alt="${e.name}" class="h-40 w-full object-cover rounded-md mb-2">
+                    <h3 class="text-xl font-bold">${e.name} <span class="text-yellow-400">[Lvl ${e.level}]</span></h3>
+                    <p class="text-red-400">HP: ${e.hp.toLocaleString()} | Atk: ${e.attack.toLocaleString()}</p>
+                    <p class="text-yellow-400">Recompensa: ${e.xp.toLocaleString()} XP | $${e.money.toLocaleString()}</p>
+                    <button onclick='startBattle(${JSON.stringify(e)}, ${ENERGY_COST_PER_FIGHT})' class="mt-2 btn-game bg-red-700 w-full p-2 rounded-md font-bold">Lutar (${ENERGY_COST_PER_FIGHT} <i class="fas fa-bolt"></i>)</button>
+                </div>`;
+        });
+    }
+
+    function renderBosses() {
+        const container = document.getElementById('bosses-list');
+        container.innerHTML = '';
+        bosses.forEach(bossTemplate => {
+            const boss = getScaledEnemy(bossTemplate, player.level);
+            const lastDefeat = player.bossCooldowns[boss.id] || 0;
+            const cooldown = boss.cooldown || 86400000; // 24 hours
+            const now = new Date().getTime();
+            
+            if (now > lastDefeat + cooldown) {
+                 container.innerHTML += `
+                    <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-red-700">
+                        <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2">
+                        <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
+                        <p class="text-red-400">HP: ${boss.hp.toLocaleString()} | Atk: ${boss.attack.toLocaleString()}</p>
+                        <p class="text-yellow-400">Recompensa: ${boss.xp.toLocaleString()} XP | $${boss.money.toLocaleString()}</p>
+                        <button onclick='startBattle(${JSON.stringify(boss)}, ${ENERGY_COST_PER_FIGHT * 2})' class="mt-2 btn-game bg-red-700 w-full p-2 rounded-md font-bold">Lutar (${ENERGY_COST_PER_FIGHT * 2} <i class="fas fa-bolt"></i>)</button>
+                    </div>`;
+            } else {
+                const remainingTime = (lastDefeat + cooldown) - now;
+                const hours = Math.floor(remainingTime / 3600000);
+                const minutes = Math.floor((remainingTime % 3600000) / 60000);
+                container.innerHTML += `
+                     <div class="bg-gray-900 p-4 rounded-lg text-center border-2 border-red-900 opacity-50">
+                        <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2 filter grayscale">
+                        <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
+                        <p class="text-gray-400 mt-4">Retorna em:</p>
+                        <p class="text-2xl font-bold text-red-500">${hours}h ${minutes}m</p>
+                    </div>`;
+            }
+        });
+    }
+
+    function renderAchievements() {
+        const container = document.getElementById('achievements-list');
+        container.innerHTML = '';
+
+        achievements.forEach(ach => {
+            let currentProgress = 0;
+            let goalValue = ach.goal.value;
+            let isComplete = false;
+            
+            if (ach.goal.type === 'stat') {
+                currentProgress = player.stats[ach.goal.stat] || 0;
+            } else if (ach.goal.type === 'level') {
+                currentProgress = player.level;
+            }
+            
+            isComplete = currentProgress >= goalValue;
+            const isClaimed = player.achievements.includes(ach.id);
+            const progressPercent = Math.min((currentProgress / goalValue) * 100, 100);
+
+            let rewardText = Object.entries(ach.reward).map(([key, value]) => {
+                if (key === 'money') return `${value.toLocaleString()}$`;
+                if (key === 'xp') return `${value.toLocaleString()} XP`;
+                if (key === 'stones') return `${value} Pedras`;
+                if (key === 'skillPoints') return `${value} Pontos`;
+                return `${value} ${key}`;
+            }).join(', ');
+            
+            container.innerHTML += `
+                <div class="bg-gray-800 p-4 rounded-lg border-2 ${isClaimed ? 'border-green-600' : 'border-gray-700'} ${isComplete && !isClaimed ? 'border-yellow-400' : ''}">
+                    <div class="flex items-center gap-4 mb-2">
+                        <i class="fas ${ach.icon} text-3xl ${isClaimed ? 'text-green-400' : 'text-yellow-400'}"></i>
+                        <div>
+                            <h3 class="text-2xl font-bold ${isClaimed ? 'text-green-400' : 'text-yellow-300'}">${ach.name}</h3>
+                            <p class="text-gray-400">${ach.description}</p>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container w-full h-4 my-2">
+                        <div class="progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                    <p class="text-center">${currentProgress.toLocaleString()} / ${goalValue.toLocaleString()}</p>
+                    <p class="text-green-400 mt-2"><strong>Recompensa:</strong> ${rewardText}</p>
+                    <button onclick="claimAchievement(${ach.id})" class="mt-2 btn-game ${isComplete && !isClaimed ? 'bg-green-700' : 'bg-gray-500'} w-full p-2 rounded-md font-bold" ${!isComplete || isClaimed ? 'disabled' : ''}>
+                        ${isClaimed ? 'COLETADO' : 'COLETAR'}
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // --- LÓGICA DO JOGO ---
+    function startMission(missionId) {
+        if (player.activeMission || player.offlinePatrol.active) return;
+        const missionTemplate = missions.find(m => m.id === missionId);
+        if (!missionTemplate) return;
+        
+        player.activeMission = getScaledMission(missionTemplate, player.level);
+        player.missionProgress = {};
+        showToast(`Missão iniciada!`);
+        renderMissions();
+    }
+    
+    function abandonMission() {
+        if (!player.activeMission) return;
+        showToast(`Missão "${player.activeMission.title}" abandonada.`);
+        player.activeMission = null;
+        player.missionProgress = {};
+        renderMissions();
+    }
+
+    function setDistributionAmount(amount) {
+        distributionAmount = amount;
+        document.querySelectorAll('.dist-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.dist-btn[data-amount="${amount}"]`).classList.add('active');
+    }
+
+    function spendPoint(stat) {
+        let pointsToSpend = (distributionAmount === 'MAX') ? player.skillPoints : distributionAmount;
+        pointsToSpend = Math.min(pointsToSpend, player.skillPoints);
+        if (pointsToSpend > 0) {
+            player.skillPoints -= pointsToSpend;
+            if (stat === 'baseAttack') player.baseAttack += pointsToSpend;
+            else player.stats[stat] += pointsToSpend;
+            updateUI();
+        }
+    }
+
+    function buyItem(type, itemId) {
+        if (type === 'potion') {
+            const itemTemplate = potions.find(i => i.id === itemId);
+            if (player.money < itemTemplate.price) { showToast("Dinheiro insuficiente!", 'error'); return; }
+            player.money -= itemTemplate.price;
+            const effectStat = itemTemplate.effect.stat;
+            if (effectStat === 'baseAttack') player.baseAttack += itemTemplate.effect.value;
+            else if (player.stats.hasOwnProperty(effectStat)) player.stats[effectStat] += itemTemplate.effect.value;
+            showToast(`${itemTemplate.name} usado! Seu status de ${effectStat.replace('baseAttack', 'Ataque')} aumentou!`);
+            updateUI(); return;
+        }
+
+        const sourceList = type === 'weapon' ? currentShopStock.weapons : currentShopStock.armors;
+        const item = sourceList.find(i => i.shopId === itemId);
+
+        if (!item) {
+            console.error("Item not found in shop stock", itemId);
+            showToast("Erro ao encontrar item na loja.", "error");
+            return;
+        }
+        
+        let canAfford = false;
+        if (item.goldPrice) {
+            if (player.gold >= item.goldPrice) {
+                player.gold -= item.goldPrice;
+                canAfford = true;
+            } else {
+                showToast("Barras de Ouro insuficientes!", 'error');
+                return;
+            }
+        } else {
+            if (player.money >= item.price) {
+                player.money -= item.price;
+                canAfford = true;
+            } else {
+                showToast("Dinheiro insuficiente!", 'error');
+                return;
+            }
+        }
+        
+        if (canAfford) {
+            soundManager.play('buy');
+            const newItem = JSON.parse(JSON.stringify(item));
+            newItem.refineLevel = 0;
+            newItem.instanceId = player.itemInstanceCounter++;
+            delete newItem.shopId; // Remove shop-specific ID
+
+            const inventoryListName = type + 's';
+            player.inventory[inventoryListName].push(newItem);
+            showToast(`Você comprou ${newItem.name}!`);
+            updateUI();
+        }
+    }
+
+    function equipItem(type, instanceId) {
+        const inventory = player.inventory[type + 's'];
+        const itemIndex = inventory.findIndex(i => i.instanceId === instanceId);
+        if (itemIndex === -1) return;
+        const itemToEquip = inventory[itemIndex];
+        const currentlyEquipped = player[type];
+
+        const oldMaxHp = getPlayerTotalStats().maxHp + (20 * (player.level-1));
+
+        if (currentlyEquipped.id !== 0) inventory.push(currentlyEquipped);
+        inventory.splice(itemIndex, 1);
+        player[type] = itemToEquip;
+        
+        const newMaxHp = getPlayerTotalStats().maxHp + (20 * (player.level-1));
+        const hpDifference = newMaxHp - oldMaxHp;
+        
+        if (hpDifference > 0) {
+            player.hp += hpDifference;
+        }
+        player.hp = Math.min(player.hp, newMaxHp);
+
+        showToast(`Você equipou ${itemToEquip.name}!`);
+        updateUI(); renderInventory();
+    }
+    
+    function unequipItem(type) {
+        const currentlyEquipped = player[type];
+        if (currentlyEquipped.id === 0) return;
+
+        player.inventory[type + 's'].push(currentlyEquipped);
+        
+        const oldMaxHp = getPlayerTotalStats().maxHp + (20 * (player.level-1));
+
+        if (type === 'weapon') {
+            player.weapon = getInitialPlayerState().weapon;
+        } else if (type === 'armor') {
+            player.armor = getInitialPlayerState().armor;
+        }
+
+        const newMaxHp = getPlayerTotalStats().maxHp + (20 * (player.level-1));
+        player.hp = Math.min(player.hp, newMaxHp);
+
+        showToast(`${currentlyEquipped.name} desequipado.`);
+        updateUI();
+        renderInventory();
+    }
+
+    function sellItem(type, instanceId) {
+        const inventory = player.inventory[type + 's'];
+        const itemIndex = inventory.findIndex(i => i.instanceId === instanceId);
+        if (itemIndex === -1) return;
+
+        const itemToSell = inventory[itemIndex];
+        const templateList = type === 'weapon' ? weapons : armors;
+        const itemTemplate = templateList.find(t => t.id === itemToSell.id);
+        const sellPrice = Math.round((itemTemplate?.price || 0) * 0.25);
+
+        player.money += sellPrice;
+        player.stats.totalMoneyEarned += sellPrice;
+        inventory.splice(itemIndex, 1);
+
+        showToast(`${itemToSell.name} vendido por $${sellPrice.toLocaleString()}!`);
+        updateUI();
+        renderInventory();
+    }
+
+
+    function addXP(amount) {
+        let finalAmount = amount;
+        if (gameEvents.doubleXp && gameEvents.doubleXp.active) {
+            finalAmount *= gameEvents.doubleXp.multiplier || 2;
+        }
+        player.xp += Math.round(finalAmount);
+        while (player.xp >= player.xpToNextLevel) { levelUp(); }
+        updateUI();
+    }
+
+    function levelUp() {
+        player.xp -= player.xpToNextLevel; player.level++;
+        player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.15 + 50);
+        player.skillPoints += 5; player.baseAttack += 2;
+        player.maxHp = getPlayerTotalStats().maxHp + (20 * (player.level - 1));
+        player.hp = player.maxHp;
+        soundManager.play('levelUp');
+        showToast(`Nível ${player.level}! +5 Pontos de Atributo!`, 'success');
+        updatePlayerLeaderboardData();
+    }
+
+    function refineItem(type) {
+        const item = player[type];
+        if (!item || item.id === 0) { showToast("Nenhum item equipado!", 'error'); return; }
+        if (item.refineLevel >= MAX_REFINE_LEVEL) { showModal("Refinamento", "Nível máximo de refinamento atingido!"); return; }
+        
+        const cost = (item.refineLevel || 0) + 1;
+        if (player.inventory.consumables.refinementStones < cost) { showModal("Refinamento", "Pedras de refinamento insuficientes!"); return; }
+        
+        player.inventory.consumables.refinementStones -= cost;
+        
+        const successChance = 100 - (item.refineLevel * 7);
+        if (Math.random() * 100 < successChance) {
+            item.refineLevel++;
+            if (item.refineLevel > player.stats.highestRefine) {
+                player.stats.highestRefine = item.refineLevel;
+            }
+            soundManager.play('refineSuccess');
+            showModal("Sucesso!", `${item.name} refinado para +${item.refineLevel}!`);
+        } else {
+            soundManager.play('refineFail');
+            showModal("Falha!", `A tentativa de refinamento para +${item.refineLevel + 1} falhou!`);
+        }
+        updateUI();
+        renderInventory();
+    }
+
+    // --- LÓGICA DE BATALHA ---
+    function startBattle(enemyObject, energyCost) {
+        if (isBattleInProgress) return;
+        if (player.energy < energyCost) {
+            showToast("Energia insuficiente para lutar!", "error");
+            return;
+        }
+
+        player.energy -= energyCost;
+
+        currentEnemy = JSON.parse(JSON.stringify(enemyObject));
+        currentEnemy.baseHp = enemyObject.hp; 
+        player.statusEffects = {};
+        document.getElementById('battle-player-name').innerText = player.name;
+        document.getElementById('battle-player-img').src = player.avatar;
+        document.getElementById('battle-enemy-name').innerText = currentEnemy.name;
+        document.getElementById('battle-enemy-img').src = currentEnemy.image;
+        updateBattleUI(); document.getElementById('battle-log').innerHTML = '';
+        logBattle("A luta começou!");
+        isBattleInProgress = true;
+        document.getElementById('skip-battle-btn').style.display = 'inline-block';
+        showScreen('battle');
+        battleTimeoutId = setTimeout(() => battleTurn(), 1000);
+    }
+    
+    function battleTurn() {
+        if (!isBattleInProgress) return;
+        const totalStats = getPlayerTotalStats();
+        
+        // --- ATAQUE DO JOGADOR ---
+        let finalEnemyDefense = currentEnemy.defense || 0;
+        const weaponAbility = player.weapon.ability;
+        
+        soundManager.play('attack');
+
+        if (weaponAbility && weaponAbility.type === "armorBreak" && Math.random() * 100 < weaponAbility.chance) {
+            finalEnemyDefense *= (1 - weaponAbility.value);
+            logBattle(`HABILIDADE: Você quebrou a armadura do inimigo!`);
+        }
+
+        let playerDamage = Math.max(1, (player.baseAttack + getTotalWeaponDamage(player.weapon)) - finalEnemyDefense);
+        
+        let isCrit = Math.random() * 100 < totalStats.luck;
+        if (isCrit) {
+            playerDamage *= 1.5;
+            soundManager.play('crit');
+            triggerScreenShake();
+        } else {
+            soundManager.play('hit');
+        }
+        currentEnemy.hp = Math.max(0, currentEnemy.hp - playerDamage);
+        logBattle(`Você ${isCrit ? 'CRITICOU' : 'atacou'} e causou ${Math.round(playerDamage)} de dano.`);
+        animateDamage(playerDamage, 'battle-enemy-img', isCrit, false);
+        
+        if (weaponAbility && Math.random() * 100 < weaponAbility.chance) {
+            if (weaponAbility.type === "invincibility" && !player.statusEffects.invincibility) {
+                player.statusEffects.invincibility = weaponAbility.duration;
+                logBattle(`HABILIDADE: Você se sente invencível!`);
+            }
+            if (weaponAbility.type === "lifesteal") {
+                const healedAmount = Math.round(playerDamage * weaponAbility.value);
+                player.hp = Math.min(player.maxHp, player.hp + healedAmount);
+                logBattle(`HABILIDADE: Você roubou ${healedAmount} de vida!`);
+                animateDamage(healedAmount, 'battle-player-img', false, false, true);
+            }
+            if (weaponAbility.type === "stun") {
+                currentEnemy.statusEffects = currentEnemy.statusEffects || {};
+                currentEnemy.statusEffects.stunned = weaponAbility.duration;
+                logBattle(`HABILIDADE: Você atordoou ${currentEnemy.name}!`);
+            }
+        }
+
+        updateBattleUI();
+        if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
+
+        // --- ATAQUE DO INIMIGO ---
+        battleTimeoutId = setTimeout(() => {
+            currentEnemy.statusEffects = currentEnemy.statusEffects || {};
+            if (currentEnemy.statusEffects.stunned > 0) {
+                 logBattle(`${currentEnemy.name} está atordoado e não pode atacar!`);
+                 currentEnemy.statusEffects.stunned--;
+            } else if (player.statusEffects.invincibility > 0) {
+                logBattle(`${currentEnemy.name} ataca, mas você está invencível!`);
+                player.statusEffects.invincibility--;
+                animateDamage(0, 'battle-player-img', false, true);
+            } else {
+                let isDodge = Math.random() * 100 < totalStats.agility;
+                let enemyDamage = 0;
+                if(!isDodge) {
+                    enemyDamage = Math.max(1, currentEnemy.attack - totalStats.defense);
+
+                    const armorAbility = player.armor.ability;
+                    if (player.hp - enemyDamage <= 0 && armorAbility && armorAbility.type === 'lastStand' && !player.statusEffects.lastStandUsed) {
+                        enemyDamage = player.hp - 1;
+                        player.statusEffects.lastStandUsed = true;
+                        logBattle(`HABILIDADE: Você sobrevive ao golpe fatal com 1 HP!`);
+                    }
+
+                    player.hp = Math.max(0, player.hp - enemyDamage);
+                    logBattle(`${currentEnemy.name} atacou e causou ${Math.round(enemyDamage)} de dano.`);
+                    soundManager.play('hit');
+
+                    if (armorAbility && armorAbility.type === "damageReflection" && Math.random() * 100 < armorAbility.chance) {
+                        const reflectedDamage = Math.round(enemyDamage * armorAbility.value);
+                        currentEnemy.hp = Math.max(0, currentEnemy.hp - reflectedDamage);
+                        logBattle(`HABILIDADE: Você refletiu ${reflectedDamage} de dano!`);
+                        animateDamage(reflectedDamage, 'battle-enemy-img', false, false);
+                    }
+
+                } else { logBattle(`Você ESQUIVOU do ataque!`); }
+                animateDamage(enemyDamage, 'battle-player-img', false, isDodge);
+            }
+
+            updateBattleUI();
+            if (player.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(false), 1000); return; }
+            battleTimeoutId = setTimeout(() => battleTurn(), 1500);
+        }, 1500);
+    }
+    
+    function skipBattle() {
+        if (!isBattleInProgress) return;
+        clearTimeout(battleTimeoutId); isBattleInProgress = false;
+        const totalStats = getPlayerTotalStats();
+        while(player.hp > 0 && currentEnemy.hp > 0) {
+            let pDmg = player.baseAttack + getTotalWeaponDamage(player.weapon);
+            if (Math.random() * 100 < totalStats.luck) pDmg *= 1.5;
+            currentEnemy.hp -= pDmg;
+            if (currentEnemy.hp <= 0) break;
+            if (Math.random() * 100 > totalStats.agility) {
+                let eDmg = Math.max(1, currentEnemy.attack - totalStats.defense);
+                player.hp -= eDmg;
+            }
+        }
+        updateBattleUI(); endBattle(player.hp > 0);
+    }
+
+    function endBattle(playerWon) {
+        clearTimeout(battleTimeoutId);
+        isBattleInProgress = false;
+        document.getElementById('skip-battle-btn').style.display = 'none';
+
+        let modalTitle, modalContent;
+
+        if (playerWon) {
+            const originalEnemy = [...enemies, ...bosses].find(e => e.id === currentEnemy.id);
+            modalTitle = "Vitória!";
+            modalContent = `Você derrotou ${currentEnemy.name}!<br>Recompensas: <span class="text-yellow-400">${currentEnemy.money.toLocaleString()}$</span> e <span class="text-yellow-400">${currentEnemy.xp.toLocaleString()} XP</span>.`;
+
+            player.money += currentEnemy.money;
+            player.stats.totalMoneyEarned += currentEnemy.money;
+            addXP(currentEnemy.xp);
+            player.hp = player.maxHp;
+            player.stats.enemiesKilled++;
+            
+            if (bosses.some(b => b.id === currentEnemy.id)) {
+                player.bossCooldowns[currentEnemy.id] = new Date().getTime();
+            }
+            
+            if (originalEnemy.drops) {
+                originalEnemy.drops.forEach(drop => {
+                    if (Math.random() * 100 < drop.chance) {
+                        if (drop.type === 'refinementStones') {
+                             player.inventory.consumables.refinementStones += drop.amount;
+                             modalContent += `<br>Você encontrou <span class="text-cyan-400">${drop.amount} Pedra(s) de Refinamento</span>!`;
+                        } else if (drop.type === 'equipment') {
+                            const itemPool = [...weapons, ...armors];
+                            const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
+                            
+                            const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
+                            let newItem = getScaledItem(droppedItemTemplate, itemLevel);
+                            const rarity = getRandomRarity();
+                            newItem = applyRarityToItem(newItem, rarity);
+                            newItem.refineLevel = 0;
+                            newItem.instanceId = player.itemInstanceCounter++;
+                            
+                            const inventoryListName = newItem.hasOwnProperty('baseDamage') ? 'weapons' : 'armors';
+                            player.inventory[inventoryListName].push(newItem);
+                            
+                            modalContent += `<br>Você encontrou um item: ${getItemNameWithRarity(newItem)}!`;
+                        }
+                    }
+                });
+            }
+
+            if(player.activeMission) {
+                const mission = player.activeMission;
+                if (mission.goal.enemyId === originalEnemy.id) {
+                    player.missionProgress[originalEnemy.id] = (player.missionProgress[originalEnemy.id] || 0) + 1;
+                    if (player.missionProgress[originalEnemy.id] >= mission.goal.count) {
+                        modalContent += `<br><br><span class="text-green-400">Missão "${mission.title}" completa!</span>`;
+                        player.money += mission.reward.money; 
+                        player.stats.totalMoneyEarned += mission.reward.money;
+                        addXP(mission.reward.xp);
+                        player.activeMission = null; player.missionProgress = {};
+                    }
+                }
+            }
+        } else {
+            modalTitle = "Derrota...";
+            modalContent = `Você foi derrotado e perdeu <span class="text-red-400">$50</span>.`;
+            player.money = Math.max(0, player.money - 50);
+            player.hp = player.maxHp;
+        }
+
+        const previousScreen = bosses.some(b => b.id === currentEnemy.id) ? 'bosses' : 'enemies';
+        currentEnemy = null;
+        updateUI(); 
+        
+        setTimeout(() => {
+            showModal(modalTitle, modalContent, () => showScreen(previousScreen));
+        }, 500);
+    }
+    
+    function updateBattleUI() {
+        const playerHpPercent = (player.hp / player.maxHp) * 100;
+        document.getElementById('battle-player-hp-bar').style.width = `${playerHpPercent}%`;
+        document.getElementById('battle-player-hp-text').innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+        if (currentEnemy) {
+            const enemyHpPercent = (currentEnemy.hp / currentEnemy.baseHp) * 100;
+            document.getElementById('battle-enemy-hp-bar').style.width = `${enemyHpPercent}%`;
+            document.getElementById('battle-enemy-hp-text').innerText = `${Math.ceil(currentEnemy.hp)} / ${currentEnemy.baseHp}`;
+        }
+    }
+
+    function logBattle(message) {
+        const log = document.getElementById('battle-log');
+        log.innerHTML = `<p>${message}</p>` + log.innerHTML;
+    }
+
+    function animateDamage(damage, targetId, isCrit, isDodge, isHeal = false) {
+        const target = document.getElementById(targetId);
+        if(!isHeal) target.classList.add('shake');
+        const popup = document.createElement('div');
+        popup.className = 'damage-text';
+        if (isDodge) {
+            popup.textContent = 'Esquivou!'; popup.classList.add('dodge');
+        } else if (isHeal) {
+            popup.textContent = `+${Math.round(damage)}`; popup.classList.add('heal');
+        } else {
+            popup.textContent = Math.round(damage);
+            if (isCrit) popup.classList.add('crit');
+        }
+        target.parentElement.appendChild(popup);
+        setTimeout(() => {
+            popup.remove();
+            if(!isHeal) target.classList.remove('shake');
+        }, 1000);
+    }
+
+    // --- PATRULHA, ENERGIA, RECOMPENSAS, CONQUISTAS ---
+    function renderOfflinePatrol() {
+        const container = document.getElementById('offline-patrol-section');
+        if (patrolIntervalId) {
+            clearInterval(patrolIntervalId);
+            patrolIntervalId = null;
+        }
+
+        if (player.offlinePatrol.active) {
+            const updateTimer = () => {
+                const now = new Date().getTime();
+                const elapsedMs = now - player.offlinePatrol.startTime;
+                const elapsedHours = Math.floor(elapsedMs / 3600000);
+                const elapsedMinutes = Math.floor((elapsedMs % 3600000) / 60000);
+                const elapsedSeconds = Math.floor((elapsedMs % 60000) / 1000);
+                
+                container.innerHTML = `
+                    <h3 class="text-2xl font-bold text-cyan-300">Patrulha em Andamento</h3>
+                    <p class="my-2 text-xl">Tempo: ${String(elapsedHours).padStart(2, '0')}:${String(elapsedMinutes).padStart(2, '0')}:${String(elapsedSeconds).padStart(2, '0')}</p>
+                    <p class="text-sm text-gray-400">Você ganhará recompensas com base no tempo ao parar a patrulha ou ao retornar ao jogo.</p>
+                    <button onclick="stopOfflinePatrol()" class="mt-4 btn-game bg-red-700 w-full md:w-1/2 p-2 rounded-md font-bold">Parar Patrulha e Coletar</button>
+                `;
+            };
+            updateTimer();
+            patrolIntervalId = setInterval(updateTimer, 1000);
+        } else {
+            const isDisabled = player.activeMission ? 'disabled' : '';
+            container.innerHTML = `
+                <h3 class="text-2xl font-bold text-cyan-300">Patrulha Offline</h3>
+                <p class="my-2">Inicie uma patrulha para ganhar recursos passivamente, mesmo com o jogo fechado.</p>
+                <p class="text-sm text-gray-400 mb-4">(Missões normais ficam indisponíveis durante a patrulha)</p>
+                <button onclick="startOfflinePatrol()" class="btn-game ${isDisabled ? 'bg-gray-500' : 'bg-cyan-700'} w-full md:w-1/2 p-2 rounded-md font-bold" ${isDisabled}>Iniciar Patrulha</button>
+            `;
+        }
+    }
+
+    function startOfflinePatrol() {
+        if (player.activeMission) {
+            showToast("Você não pode iniciar uma patrulha com uma missão ativa.", 'error');
+            return;
+        }
+        player.offlinePatrol.active = true;
+        player.offlinePatrol.startTime = new Date().getTime();
+        showToast("Patrulha iniciada!", 'success');
+        renderMissions();
+    }
+
+    function stopOfflinePatrol(isFromLoad = false) {
+        if (!player.offlinePatrol.active) return;
+
+        const now = new Date().getTime();
+        const startTime = player.offlinePatrol.startTime;
+        const timeOfflineInMs = now - startTime;
+        let timeOfflineInMinutes = Math.floor(timeOfflineInMs / (1000 * 60));
+        
+        const effectiveMinutes = Math.min(timeOfflineInMinutes, MAX_PATROL_MINUTES);
+
+        if (effectiveMinutes < 1) {
+            if(!isFromLoad) showModal("Patrulha Finalizada", "Você não ficou tempo suficiente para ganhar recompensas.");
+            player.offlinePatrol = { active: false, startTime: null };
+            renderMissions();
+            return;
+        }
+
+        const moneyEarned = effectiveMinutes * PATROL_MONEY_PER_MINUTE * player.level;
+        const xpEarned = effectiveMinutes * PATROL_XP_PER_MINUTE * player.level;
+        
+        let stonesEarned = 0;
+        let itemsFound = [];
+        const hoursPatrolling = Math.floor(effectiveMinutes / 60);
+        for(let i=0; i < hoursPatrolling; i++) {
+            if (Math.random() * 100 < PATROL_STONES_PER_HOUR_CHANCE) {
+                stonesEarned++;
+            }
+            if (Math.random() * 100 < PATROL_EQUIPMENT_PER_HOUR_CHANCE) {
+                const itemPool = [...weapons, ...armors];
+                const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
+                const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
+                let newItem = getScaledItem(droppedItemTemplate, itemLevel);
+                const rarity = getRandomRarity();
+                newItem = applyRarityToItem(newItem, rarity);
+                newItem.refineLevel = 0;
+                newItem.instanceId = player.itemInstanceCounter++;
+                const inventoryListName = newItem.hasOwnProperty('baseDamage') ? 'weapons' : 'armors';
+                player.inventory[inventoryListName].push(newItem);
+                itemsFound.push(newItem);
+            }
+        }
+
+        player.money += moneyEarned;
+        player.stats.totalMoneyEarned += moneyEarned;
+        player.inventory.consumables.refinementStones += stonesEarned;
+        player.stats.totalPatrolTime += Math.floor(effectiveMinutes / 60);
+        addXP(xpEarned);
+
+        let modalTitle = isFromLoad ? "Recompensas de Patrulha Offline" : "Patrulha Finalizada";
+        let modalContent = `Você patrulhou por ${Math.floor(effectiveMinutes/60)}h e ${effectiveMinutes % 60}m.<br>Recompensas:<br>
+                                 <span class="text-green-400">${moneyEarned.toLocaleString()} Dinheiro</span><br>
+                                 <span class="text-yellow-400">${xpEarned.toLocaleString()} XP</span>`;
+        if (stonesEarned > 0) {
+            modalContent += `<br><span class="text-cyan-400">${stonesEarned} Pedra(s) de Refinamento</span>`;
+        }
+        if (itemsFound.length > 0) {
+            modalContent += `<br><strong>Itens Encontrados:</strong>`;
+            itemsFound.forEach(item => {
+                modalContent += `<br>${getItemNameWithRarity(item)}`;
+            });
+        }
+        
+        showModal(modalTitle, modalContent);
+        
+        player.offlinePatrol = { active: false, startTime: null };
+        updateUI();
+        renderMissions();
+    }
+
+    function checkOfflinePatrolRewards() {
+        if (player.offlinePatrol.active && player.offlinePatrol.startTime) {
+            stopOfflinePatrol(true);
+        }
+    }
+
+     function updateEnergyTimerUI() {
+        const timerEl = document.getElementById('energy-regen-timer');
+        if (!timerEl) return;
+
+        if (player.energy >= player.maxEnergy) {
+            timerEl.innerHTML = 'Energia Cheia';
+            return;
+        }
+
+        const now = new Date().getTime();
+        const lastRegen = player.lastEnergyRegenTime || now;
+        const secondsPassed = (now - lastRegen) / 1000;
+        
+        const secondsSinceLastFullPoint = secondsPassed % ENERGY_REGEN_SECONDS_PER_POINT;
+        const secondsUntilNextPoint = Math.ceil(ENERGY_REGEN_SECONDS_PER_POINT - secondsSinceLastFullPoint);
+        
+        const minutes = Math.floor(secondsUntilNextPoint / 60);
+        const seconds = secondsUntilNextPoint % 60;
+        
+        timerEl.innerHTML = `+1 em ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function regenerateEnergy() {
+        if (player.energy >= player.maxEnergy) {
+            player.lastEnergyRegenTime = new Date().getTime();
+            return;
+        }
+
+        const now = new Date().getTime();
+        const lastRegen = player.lastEnergyRegenTime || now;
+        const secondsPassed = (now - lastRegen) / 1000;
+        
+        const energyToGain = Math.floor(secondsPassed / ENERGY_REGEN_SECONDS_PER_POINT);
+
+        if (energyToGain > 0) {
+            player.energy = Math.min(player.maxEnergy, player.energy + energyToGain);
+            player.lastEnergyRegenTime += energyToGain * ENERGY_REGEN_SECONDS_PER_POINT * 1000;
+            updateUI();
+        }
+    }
+
+    function refillEnergy() {
+        if (player.gold < GOLD_COST_REFILL_ENERGY) {
+            showToast(`Você precisa de ${GOLD_COST_REFILL_ENERGY} Barras de Ouro para recarregar a energia.`, 'error');
+            return;
+        }
+        if (player.energy >= player.maxEnergy) {
+            showToast("Sua energia já está cheia.", 'error');
+            return;
+        }
+
+        player.gold -= GOLD_COST_REFILL_ENERGY;
+        player.energy = player.maxEnergy;
+        player.lastEnergyRegenTime = new Date().getTime();
+        showToast("Energia recarregada!", "success");
+        updateUI();
+    }
+    
+    function checkDailyReward() {
+        const today = new Date().toDateString();
+        const lastLogin = player.dailyReward.lastLoginDate;
+
+        if (today === lastLogin) return; 
+
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toDateString();
+
+        if (lastLogin === yesterday) {
+            player.dailyReward.loginStreak++;
+        } else {
+            player.dailyReward.loginStreak = 1; 
+        }
+        
+        const streak = player.dailyReward.loginStreak;
+        const rewardIndex = Math.min(streak - 1, dailyRewards.length - 1);
+        const reward = dailyRewards[rewardIndex];
+
+        let rewardText = `Você recebeu:<br><span class="text-yellow-400">${reward.money.toLocaleString()}$</span> e <span class="text-yellow-400">${reward.xp.toLocaleString()} XP</span>.`;
+        player.money += reward.money;
+        player.stats.totalMoneyEarned += reward.money;
+        addXP(reward.xp);
+
+        if (reward.stones) {
+            player.inventory.consumables.refinementStones += reward.stones;
+            rewardText += `<br>E <span class="text-cyan-400">${reward.stones} Pedra(s) de Refinamento</span>!`;
+        }
+         if (reward.gold) {
+            player.gold += reward.gold;
+            rewardText += `<br>E <span class="text-cyan-400">${reward.gold} Ouro</span>!`;
+        }
+
+
+        player.dailyReward.lastLoginDate = today;
+        showModal(`Recompensa Diária (Dia ${streak})`, rewardText);
+        updateUI();
+    }
+
+    function claimAchievement(achievementId) {
+        if (player.achievements.includes(achievementId)) return;
+
+        const ach = achievements.find(a => a.id === achievementId);
+        if (!ach) return;
+        
+        let isComplete = false;
+        if (ach.goal.type === 'stat') {
+            isComplete = (player.stats[ach.goal.stat] || 0) >= ach.goal.value;
+        } else if (ach.goal.type === 'level') {
+            isComplete = player.level >= ach.goal.value;
+        }
+
+        if (isComplete) {
+            player.achievements.push(ach.id);
+            
+            let rewardText = [];
+            if (ach.reward.money) {
+                player.money += ach.reward.money;
+                player.stats.totalMoneyEarned += ach.reward.money;
+                rewardText.push(`${ach.reward.money.toLocaleString()}$`);
+            }
+            if (ach.reward.xp) {
+                addXP(ach.reward.xp);
+                rewardText.push(`${ach.reward.xp.toLocaleString()} XP`);
+            }
+            if (ach.reward.stones) {
+                player.inventory.consumables.refinementStones += ach.reward.stones;
+                rewardText.push(`${ach.reward.stones} Pedras`);
+            }
+            if (ach.reward.skillPoints) {
+                player.skillPoints += ach.reward.skillPoints;
+                rewardText.push(`${ach.reward.skillPoints} Pontos`);
+            }
+
+            showToast(`Conquista "${ach.name}" coletada! Recompensa: ${rewardText.join(', ')}`);
+            soundManager.play('levelUp');
+            updateUI();
+            renderAchievements();
+        }
+    }
+
+    // --- GANGUES (FIREBASE) ---
+    function renderGangScreen() {
+        const container = document.getElementById('gang-content');
+        if (!userId) {
+            container.innerHTML = '<p>Conectando ao servidor...</p>';
+            return;
+        }
+
+        if (player.gangId) {
+            if (gangUnsubscribe) gangUnsubscribe();
+            const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, player.gangId);
+            gangUnsubscribe = window.firebase.onSnapshot(gangRef, (doc) => {
+                if (doc.exists()) {
+                    const gangData = doc.data();
+                    const membersList = gangData.members.map(memberId => `<li class="p-2 bg-gray-700 rounded-md truncate">${memberId === gangData.leaderId ? '<i class="fas fa-crown text-yellow-400"></i>' : ''} ${memberId}</li>`).join('');
+                    container.innerHTML = `
+                        <div class="bg-gray-800 p-6 rounded-lg">
+                             <h3 class="text-4xl font-bold text-yellow-300">[${gangData.tag}] ${gangData.name}</h3>
+                             <p class="text-lg mt-2">ID da Gangue (para convidar): <strong class="text-white select-all">${player.gangId}</strong></p>
+                             
+                             <div class="mt-6">
+                                 <h4 class="text-2xl font-bold">Banco da Gangue</h4>
+                                 <p class="text-3xl text-green-400 mt-2">$${(gangData.bank || 0).toLocaleString()}</p>
+                                 <div class="mt-4 flex flex-col md:flex-row gap-4 justify-center">
+                                     <div class="bg-gray-700 p-3 rounded-lg">
+                                         <input type="number" id="gang-deposit-amount" placeholder="Valor para depositar" class="w-full mb-2">
+                                         <button onclick="depositToGangBank()" class="btn-game bg-green-700 w-full p-2 rounded-md font-bold">Depositar</button>
+                                     </div>
+                                     <div class="bg-gray-700 p-3 rounded-lg">
+                                         <input type="number" id="gang-withdraw-amount" placeholder="Valor para sacar" class="w-full mb-2">
+                                         <button onclick="withdrawFromGangBank()" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold" ${userId !== gangData.leaderId ? 'disabled' : ''}>Sacar (Líder)</button>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             <div class="mt-6">
+                                 <h4 class="text-2xl font-bold">Membros (${gangData.members.length})</h4>
+                                 <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">${membersList}</ul>
+                             </div>
+                             <button onclick="leaveGang()" class="mt-6 btn-game bg-red-800 px-4 py-2 rounded-md">Sair da Gangue</button>
+                        </div>
+                   `;
+                } else {
+                    player.gangId = null;
+                    renderGangScreen();
+                }
+            });
+        } else {
+             if (gangUnsubscribe) {
+                 gangUnsubscribe();
+                 gangUnsubscribe = null;
+             }
+             container.innerHTML = `
+                 <p class="text-xl mb-4">Você não está em nenhuma gangue.</p>
+                 <div class="flex flex-col md:flex-row gap-4 justify-center">
+                      <div class="bg-gray-800 p-4 rounded-lg flex-1">
+                          <h3 class="text-2xl font-bold text-green-400 mb-2">Criar uma Gangue</h3>
+                          <input type="text" id="gang-name-input" placeholder="Nome da Gangue (Ex: Os Intocáveis)" class="w-full mb-2">
+                          <input type="text" id="gang-tag-input" placeholder="TAG (Ex: INT)" maxlength="5" class="w-full mb-2">
+                          <button onclick="createGang()" class="btn-game bg-green-700 w-full p-2 rounded-md font-bold">Fundar Gangue</button>
+                      </div>
+                      <div class="bg-gray-800 p-4 rounded-lg flex-1">
+                          <h3 class="text-2xl font-bold text-blue-400 mb-2">Entrar em uma Gangue</h3>
+                          <input type="text" id="gang-id-input" placeholder="Cole o ID da Gangue aqui" class="w-full mb-2">
+                          <button onclick="joinGang()" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Juntar-se</button>
+                      </div>
+                 </div>
+             `;
+        }
+    }
+    
+    async function createGang() {
+        const name = document.getElementById('gang-name-input').value.trim();
+        const tag = document.getElementById('gang-tag-input').value.trim().toUpperCase();
+
+        if (!name || !tag) {
+            showToast("Nome e TAG são obrigatórios.", "error");
+            return;
+        }
+
+        try {
+            const newGangRef = window.firebase.doc(window.firebase.collection(db, `/artifacts/${appId}/public/data/gangs`));
+            const gangData = {
+                name: name,
+                tag: tag,
+                leaderId: userId,
+                members: [userId],
+                level: 1,
+                xp: 0,
+                xpToNextLevel: 1000,
+                bank: 0
+            };
+            await window.firebase.setDoc(newGangRef, gangData);
+            player.gangId = newGangRef.id;
+            showToast(`Gangue [${tag}] ${name} criada com sucesso!`, "success");
+            renderGangScreen();
+        } catch (e) {
+            console.error("Error creating gang: ", e);
+            showToast("Erro ao criar a gangue.", "error");
+        }
+    }
+
+    async function joinGang() {
+        const gangIdToJoin = document.getElementById('gang-id-input').value.trim();
+        if (!gangIdToJoin) {
+            showToast("Por favor, insira um ID de gangue.", "error");
+            return;
+        }
+
+        try {
+            const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, gangIdToJoin);
+            const gangDoc = await window.firebase.getDoc(gangRef);
+
+            if (gangDoc.exists()) {
+                await window.firebase.updateDoc(gangRef, {
+                    members: window.firebase.arrayUnion(userId)
+                });
+                player.gangId = gangIdToJoin;
+                showToast(`Você se juntou à gangue ${gangDoc.data().name}!`, "success");
+                renderGangScreen();
+            } else {
+                showToast("ID de gangue inválido.", "error");
+            }
+        } catch (e) {
+            console.error("Error joining gang: ", e);
+            showToast("Erro ao entrar na gangue.", "error");
+        }
+    }
+
+    async function leaveGang() {
+         if (!player.gangId) return;
+
+        try {
+            const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, player.gangId);
+            await window.firebase.updateDoc(gangRef, {
+                members: window.firebase.arrayRemove(userId)
+            });
+            showToast("Você saiu da gangue.", "success");
+            player.gangId = null;
+            renderGangScreen();
+        } catch(e) {
+             console.error("Error leaving gang: ", e);
+             showToast("Erro ao sair da gangue.", "error");
+        }
+    }
+
+    async function depositToGangBank() {
+        const amount = parseInt(document.getElementById('gang-deposit-amount').value);
+        if (isNaN(amount) || amount <= 0) {
+            showToast("Valor inválido.", "error");
+            return;
+        }
+        if (player.money < amount) {
+            showToast("Você não tem dinheiro suficiente.", "error");
+            return;
+        }
+
+        try {
+            const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, player.gangId);
+            await window.firebase.updateDoc(gangRef, {
+                bank: window.firebase.increment(amount)
+            });
+            player.money -= amount;
+            updateUI();
+            showToast(`Você depositou $${amount.toLocaleString()} no banco da gangue!`, "success");
+        } catch (e) {
+            console.error("Error depositing to gang bank: ", e);
+            showToast("Erro ao depositar.", "error");
+        }
+    }
+
+    async function withdrawFromGangBank() {
+        const amount = parseInt(document.getElementById('gang-withdraw-amount').value);
+        if (isNaN(amount) || amount <= 0) {
+            showToast("Valor inválido.", "error");
+            return;
+        }
+
+        try {
+            const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, player.gangId);
+            const gangDoc = await window.firebase.getDoc(gangRef);
+
+            if (!gangDoc.exists()) {
+                showToast("Gangue não encontrada.", "error");
+                return;
+            }
+
+            const gangData = gangDoc.data();
+            if (gangData.leaderId !== userId) {
+                showToast("Apenas o líder pode sacar dinheiro.", "error");
+                return;
+            }
+
+            if (gangData.bank < amount) {
+                showToast("O banco da gangue não tem fundos suficientes.", "error");
+                return;
+            }
+            
+            await window.firebase.updateDoc(gangRef, {
+                bank: window.firebase.increment(-amount)
+            });
+            player.money += amount;
+            player.stats.totalMoneyEarned += amount;
+            updateUI();
+            showToast(`Você sacou $${amount.toLocaleString()} do banco da gangue!`, "success");
+        } catch (e) {
+            console.error("Error withdrawing from gang bank: ", e);
+            showToast("Erro ao sacar.", "error");
+        }
+    }
+
+    // --- RANKING (FIREBASE) ---
+    async function renderLeaderboard(category) {
+        document.querySelectorAll('#screen-leaderboard .tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelector(`#screen-leaderboard .tab-btn[data-category="${category}"]`).classList.add('active');
+
+        const container = document.getElementById('leaderboard-list');
+        container.innerHTML = '<p class="text-center text-xl">Carregando ranking...</p>';
+        if (!db) {
+             container.innerHTML = '<p class="text-center text-xl text-red-500">Não foi possível carregar o ranking.</p>';
+             return;
+        }
+
+        if (category === 'gangs') {
+            try {
+                const gangsRef = window.firebase.collection(db, `/artifacts/${appId}/public/data/gangs`);
+                const q = window.firebase.query(gangsRef, window.firebase.orderBy('bank', 'desc'), window.firebase.limit(20));
+                const querySnapshot = await window.firebase.getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p class="text-center text-xl">Nenhuma gangue no ranking ainda.</p>';
+                    return;
+                }
+
+                let leaderboardHtml = '';
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const value = `$${(data.bank || 0).toLocaleString()}`;
+                    leaderboardHtml += `
+                        <div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl font-bold w-8 text-center">${rank}</span>
+                                <span class="text-xl">[${data.tag}] ${data.name}</span>
+                            </div>
+                            <span class="text-xl font-bold text-green-400">${value}</span>
+                        </div>
+                    `;
+                    rank++;
+                });
+                container.innerHTML = leaderboardHtml;
+
+            } catch (e) {
+                console.error("Error fetching gang leaderboard: ", e);
+                container.innerHTML = '<p class="text-center text-xl text-red-500">Erro ao carregar o ranking de gangues.</p>';
+            }
+            return;
+        }
+
+        try {
+            const playersRef = window.firebase.collection(db, `/artifacts/${appId}/public/data/players`);
+            const q = window.firebase.query(playersRef, window.firebase.orderBy(category, 'desc'), window.firebase.limit(20));
+            const querySnapshot = await window.firebase.getDocs(q);
+            
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p class="text-center text-xl">Ninguém no ranking ainda. Seja o primeiro!</p>';
+                return;
+            }
+
+            let leaderboardHtml = '';
+            let rank = 1;
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const value = category === 'level' ? `Nível ${data.level}` : `$${data.totalMoneyEarned.toLocaleString()}`;
+                leaderboardHtml += `
+                    <div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                             <span class="text-2xl font-bold w-8 text-center">${rank}</span>
+                             <span class="text-xl">${data.name}</span>
+                        </div>
+                        <span class="text-xl font-bold text-yellow-400">${value}</span>
+                    </div>
+                `;
+                rank++;
+            });
+            container.innerHTML = leaderboardHtml;
+
+        } catch (e) {
+            console.error("Error fetching leaderboard: ", e);
+            container.innerHTML = '<p class="text-center text-xl text-red-500">Erro ao carregar o ranking.</p>';
+        }
+    }
+
+    async function updatePlayerLeaderboardData() {
+        if (!db || !userId) return;
+
+        try {
+            const playerRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/players`, userId);
+            const publicData = {
+                name: player.name,
+                level: player.level,
+                xp: player.xp,
+                money: player.money,
+                gold: player.gold,
+                skillPoints: player.skillPoints,
+                baseAttack: player.baseAttack,
+                stats: player.stats, 
+                totalMoneyEarned: player.stats.totalMoneyEarned,
+                enemiesKilled: player.stats.enemiesKilled 
+            };
+            await window.firebase.setDoc(playerRef, publicData, { merge: true });
+        } catch (e) {
+            console.error("Error updating player leaderboard data:", e);
+        }
+    }
+
+    function promptToChangeName() {
+        const modalBody = `
+            <p>Qual será o seu novo nome nas ruas?</p>
+            <input type="text" id="new-player-name-input" value="${player.name}" class="w-full mt-2" maxlength="20">
+            <button onclick="changePlayerName()" class="btn-game bg-green-700 px-6 py-2 rounded-md font-bold uppercase mt-4">Confirmar</button>
+        `;
+        showModal("Alterar Nome", modalBody);
+        document.getElementById('modal-close-btn').classList.add('hidden');
+    }
+
+    function changePlayerName() {
+        const newName = document.getElementById('new-player-name-input').value.trim();
+        const modal = document.getElementById('game-modal');
+        if (newName && newName !== player.name) {
+            player.name = newName;
+            updateUI();
+            saveGame();
+            showToast("Nome alterado com sucesso!");
+            modal.classList.add('hidden');
+        } else if (!newName) {
+            showToast("O nome não pode estar vazio.", "error");
+        } else {
+            modal.classList.add('hidden');
+        }
+        document.getElementById('modal-close-btn').classList.remove('hidden');
+    }
+
+    function promptForPlayerName() {
+        const modalBody = `
+            <p>Bem-vindo ao Mundo Gangster! Qual será o seu nome nas ruas?</p>
+            <input type="text" id="new-player-name-input" placeholder="Seu nome" class="w-full mt-2" maxlength="20">
+            <button onclick="confirmInitialPlayerName()" class="btn-game bg-green-700 px-6 py-2 rounded-md font-bold uppercase mt-4">Confirmar</button>
+        `;
+        showModal("Crie sua Identidade", modalBody);
+        document.getElementById('modal-close-btn').classList.add('hidden');
+    }
+
+    function confirmInitialPlayerName() {
+        const newName = document.getElementById('new-player-name-input').value.trim();
+        const modal = document.getElementById('game-modal');
+        if (newName) {
+            player.name = newName;
+            updateUI();
+            saveGame(); // Salva o nome inicial
+        }
+        modal.classList.add('hidden');
+        document.getElementById('modal-close-btn').classList.remove('hidden');
+    }
+
+
+    // --- ADMIN E PERSISTÊNCIA ---
+    async function adminRenderPlayerManager() {
+        const select = document.getElementById('admin-player-select');
+        if (!db || !select) return;
+
+        select.innerHTML = '<option value="">-- Carregando jogadores... --</option>';
+
+        try {
+            const playersRef = window.firebase.collection(db, `/artifacts/${appId}/public/data/players`);
+            const querySnapshot = await window.firebase.getDocs(playersRef);
+            
+            let optionsHtml = '<option value="">-- Selecione um jogador --</option>';
+            querySnapshot.forEach(doc => {
+                optionsHtml += `<option value="${doc.id}">${doc.data().name} (${doc.id.substring(0, 5)}...)</option>`;
+            });
+            select.innerHTML = optionsHtml;
+        } catch (e) {
+            console.error("Error fetching players for admin:", e);
+            select.innerHTML = '<option value="">-- Erro ao carregar --</option>';
+        }
+    }
+
+    async function adminLoadPlayerData(playerId) {
+        const form = document.getElementById('admin-player-edit-form');
+        if (!playerId) {
+            form.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const playerRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/players`, playerId);
+            const docSnap = await window.firebase.getDoc(playerRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('admin-selected-player-id').value = playerId;
+                document.getElementById('admin-edit-player-name').value = data.name || '';
+                document.getElementById('admin-edit-player-money').value = data.money || 0;
+                document.getElementById('admin-edit-player-gold').value = data.gold || 0;
+                document.getElementById('admin-edit-player-xp').value = data.xp || 0;
+                document.getElementById('admin-edit-player-level').value = data.level || 1;
+                document.getElementById('admin-edit-player-skillPoints').value = data.skillPoints || 0;
+                document.getElementById('admin-edit-player-baseAttack').value = data.baseAttack || 0;
+                if (data.stats) {
+                    document.getElementById('admin-edit-player-defense').value = data.stats.defense || 0;
+                    document.getElementById('admin-edit-player-luck').value = data.stats.luck || 0;
+                    document.getElementById('admin-edit-player-agility').value = data.stats.agility || 0;
+                }
+                form.classList.remove('hidden');
+            } else {
+                showToast("Jogador não encontrado no banco de dados.", "error");
+                form.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error loading player data for admin:", e);
+            showToast("Erro ao carregar dados do jogador.", "error");
+        }
+    }
+
+    async function adminSaveChangesToPlayer() {
+        const playerId = document.getElementById('admin-selected-player-id').value;
+        if (!playerId) {
+            showToast("Nenhum jogador selecionado.", "error");
+            return;
+        }
+
+        try {
+            const playerRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/players`, playerId);
+            
+            const updatedData = {
+                money: parseInt(document.getElementById('admin-edit-player-money').value) || 0,
+                gold: parseInt(document.getElementById('admin-edit-player-gold').value) || 0,
+                xp: parseInt(document.getElementById('admin-edit-player-xp').value) || 0,
+                level: parseInt(document.getElementById('admin-edit-player-level').value) || 1,
+                skillPoints: parseInt(document.getElementById('admin-edit-player-skillPoints').value) || 0,
+                baseAttack: parseInt(document.getElementById('admin-edit-player-baseAttack').value) || 0,
+                'stats.defense': parseInt(document.getElementById('admin-edit-player-defense').value) || 0,
+                'stats.luck': parseInt(document.getElementById('admin-edit-player-luck').value) || 0,
+                'stats.agility': parseInt(document.getElementById('admin-edit-player-agility').value) || 0
+            };
+            
+            await window.firebase.updateDoc(playerRef, updatedData);
+
+            if (playerId === userId) {
+                player.money = updatedData.money;
+                player.gold = updatedData.gold;
+                player.xp = updatedData.xp;
+                player.level = updatedData.level;
+                player.skillPoints = updatedData.skillPoints;
+                player.baseAttack = updatedData.baseAttack;
+                player.stats.defense = updatedData['stats.defense'];
+                player.stats.luck = updatedData['stats.luck'];
+                player.stats.agility = updatedData['stats.agility'];
+                updateUI();
+            }
+
+            showToast(`Dados do jogador ${document.getElementById('admin-edit-player-name').value} atualizados!`, "success");
+            document.getElementById('admin-player-edit-form').classList.add('hidden');
+            document.getElementById('admin-player-select').value = '';
+
+        } catch (e) {
+            console.error("Error saving player data from admin:", e);
+            showToast("Erro ao salvar alterações.", "error");
+        }
+    }
+
+    function populateAdminSelectors() {
+        const typeSelector = document.getElementById('admin-item-type');
+        typeSelector.innerHTML = `
+            <option value="weapons">Armas</option>
+            <option value="armors">Armaduras</option>
+            <option value="potions">Poções</option>
+            <option value="refinementStones">Pedras de Refinamento</option>
+        `;
+        const createTypeSelector = document.getElementById('admin-create-type');
+        createTypeSelector.innerHTML = `
+            <option value="weapon">Arma</option>
+            <option value="armor">Armadura</option>
+        `;
+
+        const raritySelector = document.getElementById('admin-item-rarity');
+        raritySelector.innerHTML = '<option value="RANDOM">Aleatória</option>';
+        Object.keys(RARITY_TIERS).forEach(rarity => {
+            raritySelector.innerHTML += `<option value="${rarity}">${rarity}</option>`;
+        });
+        
+        const missionEnemySelector = document.getElementById('admin-create-mission-enemyId');
+        missionEnemySelector.innerHTML = '';
+        [...enemies, ...bosses].forEach(e => missionEnemySelector.innerHTML += `<option value="${e.id}">${e.name}</option>`);
+
+        const achGoalTypeSelector = document.getElementById('admin-create-ach-goal-type');
+        achGoalTypeSelector.innerHTML = `<option value="stat">Estatística</option><option value="level">Nível</option>`;
+        
+        const achGoalStatSelector = document.getElementById('admin-create-ach-goal-stat');
+        achGoalStatSelector.innerHTML = '';
+        Object.keys(getInitialPlayerState().stats).forEach(stat => achGoalStatSelector.innerHTML += `<option value="${stat}">${stat}</option>`);
+
+        achGoalTypeSelector.onchange = () => {
+            achGoalStatSelector.parentElement.style.display = achGoalTypeSelector.value === 'stat' ? 'flex' : 'none';
+        };
+        achGoalStatSelector.parentElement.style.display = 'flex';
+
+
+        updateAdminItemSelector();
+    }
+
+    function updateAdminItemSelector() {
+        const type = document.getElementById('admin-item-type').value;
+        const itemSelector = document.getElementById('admin-item-select');
+        const raritySelector = document.getElementById('admin-item-rarity');
+        
+        itemSelector.parentElement.style.display = 'flex';
+        raritySelector.parentElement.style.display = 'flex';
+
+        if (type === 'refinementStones') {
+             itemSelector.parentElement.style.display = 'none';
+             raritySelector.parentElement.style.display = 'none';
+        } else {
+            const itemList = { weapons, armors, potions }[type] || [];
+            itemSelector.innerHTML = '';
+            itemList.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                itemSelector.appendChild(option);
+            });
+             if (type === 'potions') {
+                raritySelector.parentElement.style.display = 'none';
+            }
+        }
+    }
+    
+    function toggleAdminCreatorUI() {
+        const type = document.getElementById('admin-create-type').value;
+        document.getElementById('admin-creator-weapon-fields').style.display = (type === 'weapon') ? 'block' : 'none';
+        document.getElementById('admin-creator-armor-fields').style.display = (type === 'armor') ? 'block' : 'none';
+    }
+    
+    function adminCreateItem() {
+        const type = document.getElementById('admin-create-type').value;
+        const name = document.getElementById('admin-create-name').value;
+        const price = parseInt(document.getElementById('admin-create-price').value) || 0;
+        const image = document.getElementById('admin-create-image').value;
+
+        if (!name) {
+            showToast("O nome do item é obrigatório!", 'error');
+            return;
+        }
+
+        let newItem = { name, price, image };
+        
+        const abilityType = document.getElementById('admin-create-ability-type').value;
+        if (abilityType) {
+            newItem.ability = {
+                type: abilityType,
+                chance: parseFloat(document.getElementById('admin-create-ability-chance').value) || 0,
+                description: document.getElementById('admin-create-ability-desc').value || ''
+            };
+            if (abilityType === 'invincibility' || abilityType === 'stun') {
+                newItem.ability.duration = parseInt(document.getElementById('admin-create-ability-value').value) || 1;
+            } else {
+                newItem.ability.value = parseFloat(document.getElementById('admin-create-ability-value').value) || 0;
+            }
+        }
+
+        if (type === 'weapon') {
+            newItem.id = (weapons.length ? Math.max(0, ...weapons.map(w => w.id)) : 0) + 1;
+            newItem.baseDamage = parseInt(document.getElementById('admin-create-baseDamage').value) || 0;
+            weapons.push(newItem);
+        } else { // armor
+            newItem.id = (armors.length ? Math.max(0, ...armors.map(a => a.id)) : 0) + 1;
+            newItem.stats = {
+                defense: parseInt(document.getElementById('admin-create-stat-defense').value) || 0,
+                hp: parseInt(document.getElementById('admin-create-stat-hp').value) || 0,
+                luck: parseInt(document.getElementById('admin-create-stat-luck').value) || 0,
+                agility: parseInt(document.getElementById('admin-create-stat-agility').value) || 0
+            };
+            armors.push(newItem);
+        }
+
+        showToast(`Item "${name}" criado e adicionado ao JSON!`, 'success');
+        document.getElementById('admin-items').value = JSON.stringify({ weapons, armors, potions }, null, 2);
+        populateAdminSelectors();
+    }
+
+    function adminCreateEnemy() {
+        const name = document.getElementById('admin-create-enemy-name').value;
+        if (!name) {
+            showToast("O nome do inimigo é obrigatório!", 'error');
+            return;
+        }
+
+        const newEnemy = {
+            id: (enemies.length + bosses.length > 0 ? Math.max(0, ...enemies.map(e => e.id), ...bosses.map(b => b.id)) : 0) + 1,
+            name: name,
+            hp: parseInt(document.getElementById('admin-create-enemy-hp').value) || 100,
+            attack: parseInt(document.getElementById('admin-create-enemy-attack').value) || 10,
+            defense: parseInt(document.getElementById('admin-create-enemy-defense').value) || 5,
+            xp: parseInt(document.getElementById('admin-create-enemy-xp').value) || 50,
+            money: parseInt(document.getElementById('admin-create-enemy-money').value) || 100,
+            image: document.getElementById('admin-create-enemy-image').value || "https://placehold.co/400x400/333333/eeeeee?text=Inimigo",
+            drops: [{ type: 'refinementStones', chance: 50, amount: 1 }, { type: 'equipment', chance: 10 }]
+        };
+
+        const isBoss = document.getElementById('admin-create-enemy-isBoss').checked;
+        if (isBoss) {
+            newEnemy.cooldown = 86400000;
+            bosses.push(newEnemy);
+            showToast(`Chefe "${name}" criado!`);
+        } else {
+            enemies.push(newEnemy);
+            showToast(`Inimigo "${name}" criado!`);
+        }
+        
+        document.getElementById('admin-gameplay').value = JSON.stringify({ enemies, bosses, missions, achievements }, null, 2);
+        populateAdminSelectors();
+    }
+
+    function adminCreateMission() {
+        const title = document.getElementById('admin-create-mission-title').value;
+        if (!title) {
+            showToast("O título da missão é obrigatório!", 'error');
+            return;
+        }
+        
+        const newMission = {
+            id: (missions.length ? Math.max(0, ...missions.map(m => m.id)) : 0) + 1,
+            title: title,
+            goal: {
+                type: "kill",
+                enemyId: parseInt(document.getElementById('admin-create-mission-enemyId').value),
+                count: parseInt(document.getElementById('admin-create-mission-count').value) || 1
+            },
+            reward: {
+                xp: parseInt(document.getElementById('admin-create-mission-xp').value) || 0,
+                money: parseInt(document.getElementById('admin-create-mission-money').value) || 0
+            }
+        };
+
+        missions.push(newMission);
+        showToast(`Missão "${title}" criada!`);
+        document.getElementById('admin-gameplay').value = JSON.stringify({ enemies, bosses, missions, achievements }, null, 2);
+        populateAdminSelectors();
+    }
+    
+    function adminCreateAchievement() {
+        const name = document.getElementById('admin-create-ach-name').value;
+        if (!name) {
+            showToast("O nome da conquista é obrigatório!", 'error');
+            return;
+        }
+
+        const reward = {};
+        const xp = parseInt(document.getElementById('admin-create-ach-reward-xp').value);
+        if (xp > 0) reward.xp = xp;
+        const money = parseInt(document.getElementById('admin-create-ach-reward-money').value);
+        if (money > 0) reward.money = money;
+        const stones = parseInt(document.getElementById('admin-create-ach-reward-stones').value);
+        if (stones > 0) reward.stones = stones;
+        const skillPoints = parseInt(document.getElementById('admin-create-ach-reward-sp').value);
+        if (skillPoints > 0) reward.skillPoints = skillPoints;
+
+        const goalType = document.getElementById('admin-create-ach-goal-type').value;
+        const newGoal = {
+            type: goalType,
+            value: parseInt(document.getElementById('admin-create-ach-goal-value').value) || 1
+        };
+        
+        if (goalType === 'stat') {
+            const statElement = document.getElementById('admin-create-ach-goal-stat');
+            if(statElement) {
+                newGoal.stat = statElement.value;
+            }
+        }
+
+        const newAchievement = {
+            id: (achievements.length ? Math.max(0, ...achievements.map(a => a.id)) : 0) + 1,
+            name: name,
+            description: document.getElementById('admin-create-ach-desc').value,
+            icon: document.getElementById('admin-create-ach-icon').value,
+            goal: newGoal,
+            reward: reward
+        };
+
+        achievements.push(newAchievement);
+        showToast(`Conquista "${name}" criada!`);
+        document.getElementById('admin-gameplay').value = JSON.stringify({ enemies, bosses, missions, achievements }, null, 2);
+        populateAdminSelectors();
+    }
+
+
+    function adminAddItem() {
+        const type = document.getElementById('admin-item-type').value;
+        const quantity = parseInt(document.getElementById('admin-item-quantity').value) || 1;
+
+        if (type === 'refinementStones') {
+            player.inventory.consumables.refinementStones += quantity;
+            showToast(`${quantity} Pedra(s) de Refinamento adicionada(s)!`);
+            renderInventory();
+            return;
+        }
+
+        const itemId = parseInt(document.getElementById('admin-item-select').value);
+        const sourceList = { weapons, armors, potions };
+        const listName = type;
+        const itemTemplate = sourceList[listName].find(i => i.id === itemId);
+
+        if (!itemTemplate) return;
+        
+        const rarityValue = document.getElementById('admin-item-rarity').value;
+        const inventoryListName = listName;
+        for (let i = 0; i < quantity; i++) {
+            let newItem = JSON.parse(JSON.stringify(itemTemplate));
+            let finalRarity = rarityValue === 'RANDOM' ? getRandomRarity() : rarityValue;
+            newItem = applyRarityToItem(newItem, finalRarity);
+            
+            newItem.refineLevel = 0;
+            newItem.instanceId = player.itemInstanceCounter++;
+            player.inventory[inventoryListName].push(newItem);
+        }
+        
+        showToast(`${quantity} x ${itemTemplate.name} adicionado(s) ao inventário.`);
+        renderInventory();
+    }
+
+    function adminAddResources() {
+        const xpToAdd = parseInt(document.getElementById('admin-add-xp').value) || 0;
+        const moneyToAdd = parseInt(document.getElementById('admin-add-money').value) || 0;
+        const goldToAdd = parseInt(document.getElementById('admin-add-gold').value) || 0;
+
+        if (xpToAdd > 0) {
+            addXP(xpToAdd);
+        }
+        if (moneyToAdd > 0) {
+            player.money += moneyToAdd;
+            player.stats.totalMoneyEarned += moneyToAdd;
+        }
+        if (goldToAdd > 0) {
+            player.gold += goldToAdd;
+        }
+        
+        if(xpToAdd > 0 || moneyToAdd > 0 || goldToAdd > 0) {
+            showToast(`${xpToAdd} XP, $${moneyToAdd} e ${goldToAdd} Ouro adicionados!`);
+            updateUI();
+        }
+    }
+
+    function adminResetBossCooldowns() {
+        player.bossCooldowns = {};
+        showToast("Cooldowns dos chefes resetados!");
+        if (document.getElementById('screen-bosses').classList.contains('active')) {
+            renderBosses();
+        }
+    }
+    
+    async function loadAdminEventStatus() {
+        if (!db) return;
+        try {
+            const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/events/activeEvents`);
+            const docSnap = await window.firebase.getDoc(eventsRef);
+            if (docSnap.exists()) {
+                const events = docSnap.data();
+                const checkbox = document.getElementById('admin-event-doubleXp');
+                if(checkbox) {
+                    checkbox.checked = events.doubleXp && events.doubleXp.active;
+                }
+            }
+        } catch (e) {
+            console.error("Error loading admin event status:", e);
+        }
+    }
+
+    async function adminUpdateEvents() {
+        if (!db) {
+            showToast("Não foi possível conectar ao servidor de eventos.", "error");
+            return;
+        }
+        try {
+            const doubleXpCheckbox = document.getElementById('admin-event-doubleXp');
+            const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/events/activeEvents`);
+            
+            await window.firebase.setDoc(eventsRef, {
+                doubleXp: {
+                    active: doubleXpCheckbox.checked,
+                    multiplier: 2,
+                    description: "XP em Dobro!"
+                }
+            }, { merge: true });
+
+            showToast("Eventos globais atualizados com sucesso!", "success");
+
+        } catch (e) {
+            console.error("Error updating events:", e);
+            showToast("Erro ao atualizar os eventos.", "error");
+        }
+    }
+
+    function updatePlayerItems() {
+        const allPlayerItems = [player.weapon, player.armor, ...player.inventory.weapons, ...player.inventory.armors];
+
+        for (const item of allPlayerItems) {
+            if (!item || item.id === 0) continue;
+
+            let template;
+            if (item.hasOwnProperty('baseDamage')) { 
+                template = weapons.find(t => t.id === item.id);
+            } else if (item.hasOwnProperty('stats')) {
+                template = armors.find(t => t.id === item.id);
+            }
+
+            if (template) {
+                const currentRarity = item.rarity || 'COMUM';
+                const tempTemplate = JSON.parse(JSON.stringify(template));
+                const rarityAppliedTemplate = applyRarityToItem(tempTemplate, currentRarity);
+
+                item.name = rarityAppliedTemplate.name;
+                item.price = rarityAppliedTemplate.price;
+                item.image = rarityAppliedTemplate.image;
+                item.ability = rarityAppliedTemplate.ability;
+                if (rarityAppliedTemplate.hasOwnProperty('baseDamage')) {
+                    item.baseDamage = rarityAppliedTemplate.baseDamage;
+                }
+                if (rarityAppliedTemplate.stats) {
+                    item.stats = rarityAppliedTemplate.stats;
+                }
+            }
+        }
+    }
+    
+    // --- PERSISTÊNCIA ---
+    async function saveGame() {
+        if (!userId) {
+            showToast("Erro de autenticação. Não é possível salvar.", "error");
+            return;
+        }
+        try {
+            const playerDocRef = window.firebase.doc(db, `/artifacts/${appId}/users/${userId}/player`, 'saveData');
+            const playerStateToSave = { ...player };
+            
+            await window.firebase.setDoc(playerDocRef, playerStateToSave);
+            showToast("Progresso salvo com sucesso!", "success");
+        } catch(e) {
+            console.error("Error saving game to Firestore: ", e);
+            showToast("Erro ao salvar o progresso.", "error");
+        }
+    }
+    
+    async function loadGame() {
+        if (!userId) {
+            console.log("Usuário ainda não autenticado, usando estado inicial.");
+            player = getInitialPlayerState();
+            return;
+        }
+        try {
+            const playerDocRef = window.firebase.doc(db, `/artifacts/${appId}/users/${userId}/player`, 'saveData');
+            const docSnap = await window.firebase.getDoc(playerDocRef);
+
+            const initialState = getInitialPlayerState();
+            if(docSnap.exists()){
+                const loadedData = docSnap.data();
+                player = { ...initialState, ...loadedData };
+                showToast("Progresso carregado.", "success");
+            } else {
+                console.log("Nenhum save encontrado. Criando um novo.");
+                player = initialState;
+            }
+        } catch(e) {
+            console.error("Error loading game from Firestore: ", e);
+            showToast("Erro ao carregar o progresso. Começando um novo jogo.", "error");
+            player = getInitialPlayerState();
+        }
+    }
+
+    async function saveAdminData() {
+        if (!db) return;
+        try {
+            const itemsData = JSON.parse(document.getElementById('admin-items').value);
+            const gameplayData = JSON.parse(document.getElementById('admin-gameplay').value);
+            
+            const adminItemsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'items');
+            await window.firebase.setDoc(adminItemsRef, itemsData);
+            
+            const adminGameplayRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'gameplay');
+            await window.firebase.setDoc(adminGameplayRef, gameplayData);
+            
+            showToast("Dados de admin salvos no Firestore!", "success");
+            await loadAdminData(true);
+
+        } catch(e) {
+            console.error("Error saving admin data: ", e);
+            showToast("Erro ao salvar dados de admin. Verifique o JSON.", "error");
+        }
+    }
+
+    async function loadAdminData(fromSave = false) {
+        if (!db) return;
+        try {
+            const itemsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'items');
+            const gameplayRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'gameplay');
+            
+            const itemsSnap = await window.firebase.getDoc(itemsRef);
+            const gameplaySnap = await window.firebase.getDoc(gameplayRef);
+
+            if (itemsSnap.exists()) {
+                const data = itemsSnap.data();
+                weapons = data.weapons || [];
+                armors = data.armors || [];
+                potions = data.potions || [];
+                document.getElementById('admin-items').value = JSON.stringify(data, null, 2);
+            } else {
+                // Se não houver dados, crie um documento inicial
+                const defaultItems = {
+                     weapons: [
+                        { id: 1, name: "Canivete", baseDamage: 8, price: 150, image: "https://placehold.co/200x200/444444/eeeeee?text=Canivete" },
+                        { id: 2, name: "Navalha Sanguinária", baseDamage: 12, price: 800, image: "https://placehold.co/200x200/8c0000/ffffff?text=Navalha", ability: { type: "lifesteal", chance: 30, value: 0.5, description: "30% de chance de roubar 50% do dano como vida." } },
+                     ],
+                     armors: [
+                         { id: 1, name: "Jaqueta de Couro", price: 250, image: "https://placehold.co/200x200/5a2727/ffffff?text=Jaqueta", stats: { defense: 3, hp: 20, luck: 0, agility: 0 } },
+                         { id: 2, name: "Colete à Prova de Balas", price: 1000, image: "https://placehold.co/200x200/333333/ffffff?text=Colete", stats: { defense: 10, hp: 50, luck: 0, agility: -2 } },
+                     ],
+                     potions: [
+                         { id: 1, name: "Anabolizante", price: 500, image: "https://placehold.co/200x200/ff4444/ffffff?text=Força", effect: { stat: 'baseAttack', value: 1 } },
+                     ]
+                };
+                await window.firebase.setDoc(itemsRef, defaultItems);
+                weapons = defaultItems.weapons;
+                armors = defaultItems.armors;
+                potions = defaultItems.potions;
+                document.getElementById('admin-items').value = JSON.stringify(defaultItems, null, 2);
+            }
+
+            if (gameplaySnap.exists()) {
+                 const data = gameplaySnap.data();
+                 enemies = data.enemies || [];
+                 bosses = data.bosses || [];
+                 missions = data.missions || [];
+                 achievements = data.achievements || [];
+                 document.getElementById('admin-gameplay').value = JSON.stringify(data, null, 2);
+            } else {
+                 const defaultGameplay = {
+                    enemies: [ { id: 1, name: "Capanga Novato", hp: 50, attack: 8, xp: 20, money: 50, defense: 0, image: "https://placehold.co/400x400/5a2a27/ffffff?text=Capanga", drops: [{ type: 'refinementStones', chance: 25, amount: 1 }, { type: 'equipment', chance: 5 }] } ],
+                    bosses: [ { id: 101, name: "O Don", hp: 2000, attack: 100, xp: 5000, money: 10000, defense: 50, cooldown: 86400000, image: "https://placehold.co/400x400/000000/ffffff?text=O+DON", drops: [{ type: 'refinementStones', chance: 100, amount: 10 }, { type: 'equipment', chance: 100 }] } ],
+                    missions: [ { id: 1, title: "Limpeza de Rua", description: "Derrote X Capangas Novatos.", reward: { xp: 100, money: 200 }, goal: { type: "kill", enemyId: 1, count: 3 } } ],
+                    achievements: [ { id: 1, name: "Primeira Vítima", description: "Derrote 1 inimigo.", icon: "fa-fist-raised", goal: { type: 'stat', stat: 'enemiesKilled', value: 1 }, reward: { money: 100, xp: 50 } } ]
+                };
+                await window.firebase.setDoc(gameplayRef, defaultGameplay);
+                enemies = defaultGameplay.enemies;
+                bosses = defaultGameplay.bosses;
+                missions = defaultGameplay.missions;
+                achievements = defaultGameplay.achievements;
+                document.getElementById('admin-gameplay').value = JSON.stringify(defaultGameplay, null, 2);
+            }
+
+            if(fromSave) {
+                showToast("Dados de admin recarregados do Firestore.", "success");
+                updatePlayerItems();
+            }
+
+        } catch(e) {
+            console.error("Error loading admin data: ", e);
+            showToast("Erro ao carregar dados de admin do Firestore.", "error");
+        }
+    }
+
+    // --- INICIALIZAÇÃO ---
+    async function initFirebase() {
+        try {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (!firebaseConfig) {
+                console.error("Firebase config não encontrada.");
+                document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Não foi possível conectar aos serviços online.</p>';
+                return;
+            }
+            
+            window.firebase.setLogLevel('debug');
+            const app = window.firebase.initializeApp(firebaseConfig);
+            db = window.firebase.getFirestore(app);
+            auth = window.firebase.getAuth(app);
+
+            return new Promise((resolve) => {
+                const unsubscribe = window.firebase.onAuthStateChanged(auth, async (user) => {
+                    unsubscribe(); // Roda apenas uma vez para pegar o estado inicial
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Usuário autenticado:", userId);
+                        resolve();
+                    } else {
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                const userCredential = await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
+                                userId = userCredential.user.uid;
+                            } else {
+                                const userCredential = await window.firebase.signInAnonymously(auth);
+                                userId = userCredential.user.uid;
+                            }
+                            console.log("Usuário autenticado:", userId);
+                            resolve();
+                        } catch(authError){
+                            console.error("Erro na autenticação:", authError);
+                            resolve(); 
+                        }
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error("Erro na inicialização do Firebase:", e);
+            document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro ao conectar aos serviços online.</p>';
+        }
+    }
+
+    function listenForEvents() {
+        if (!db) return;
+        const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/events/activeEvents`);
+        window.firebase.onSnapshot(eventsRef, (doc) => {
+            if (doc.exists()) {
+                gameEvents = doc.data();
+            } else {
+                gameEvents = {};
+            }
+            displayActiveEvents();
+        });
+    }
+
+    function displayActiveEvents() {
+        const banner = document.getElementById('event-banner');
+        if (gameEvents.doubleXp && gameEvents.doubleXp.active) {
+            banner.innerHTML = `🔥 EVENTO ATIVO: ${gameEvents.doubleXp.description} 🔥`;
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+    }
+
+    window.onload = async function() {
+        soundManager.init();
+        
+        await initFirebase();
+        await loadAdminData(); 
+        await loadGame(); 
+        
+        listenForEvents(); 
+        
+        regenerateEnergy(); 
+        setInterval(regenerateEnergy, 5000); 
+        energyIntervalId = setInterval(updateEnergyTimerUI, 1000);
+
+        checkOfflinePatrolRewards(); 
+        
+        checkDailyReward();
+        
+        // Chama o prompt de nome apenas se for realmente um novo jogador
+        if (player.name === "Novo Gangster") {
+            promptForPlayerName();
+        }
+        
+        updateUI();
+        populateAdminSelectors();
+        setDistributionAmount(1);
+        showScreen('main');
+    };
+    </script>
+
+</body>
+</html>
+
