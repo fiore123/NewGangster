@@ -2927,11 +2927,23 @@
     // --- INICIALIZAÇÃO ---
     async function initFirebase() {
         try {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            if (!firebaseConfig) {
-                console.error("Firebase config não encontrada.");
-                document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Não foi possível conectar aos serviços online.</p>';
-                return null;
+            // !!! IMPORTANTE: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI !!!
+            // Você encontra isso nas "Configurações do projeto" no console do Firebase.
+            const firebaseConfig = {
+                apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
+                authDomain: "new-gangstar-online.firebaseapp.com",
+                projectId: "new-gangstar-online",
+                storageBucket: "new-gangstar-online.firebasestorage.app",
+                messagingSenderId: "126343704437",
+                appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
+            };
+
+            // O código abaixo verifica se você colou a configuração.
+            if (!firebaseConfig || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
+                 console.error("Firebase config não encontrada. Cole sua configuração do Firebase na função initFirebase.");
+                 showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
+                 document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração: As chaves do Firebase não foram inseridas no código.</p>';
+                 return null;
             }
             
             const app = window.firebase.initializeApp(firebaseConfig);
@@ -2956,6 +2968,7 @@
 
                 (async () => {
                     try {
+                        // Neste ambiente, __initial_auth_token não existe, então sempre usará anônimo.
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
                         } else {
@@ -3006,14 +3019,6 @@
         
         if (!userId) {
             showToast("Falha na autenticação. As funções online não funcionarão.", "error");
-            // Carrega dados padrão para o jogo funcionar offline
-            player = getInitialPlayerState();
-            const defaultAdminData = getInitialAdminData();
-            Object.assign(window, defaultAdminData);
-            updateUI();
-            populateAdminSelectors();
-            setDistributionAmount(1);
-            showScreen('main');
             return; 
         }
         
