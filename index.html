@@ -55,7 +55,7 @@
         }
 
         .game-container {
-            max-width: 1000px;
+            max-width: 1400px; /* Aumentado */
             margin: auto;
             border: 2px solid #444;
             background-color: rgba(26, 26, 26, 0.95);
@@ -1251,6 +1251,7 @@
         player.missionProgress = {};
         showToast(`Missão iniciada!`);
         renderMissions();
+        triggerAutoSave();
     }
     
     function abandonMission() {
@@ -1259,6 +1260,7 @@
         player.activeMission = null;
         player.missionProgress = {};
         renderMissions();
+        triggerAutoSave();
     }
 
     function setDistributionAmount(amount) {
@@ -1275,6 +1277,7 @@
             if (stat === 'baseAttack') player.baseAttack += pointsToSpend;
             else player.stats[stat] += pointsToSpend;
             updateUI();
+            triggerAutoSave();
         }
     }
 
@@ -1287,7 +1290,9 @@
             if (effectStat === 'baseAttack') player.baseAttack += itemTemplate.effect.value;
             else if (player.stats.hasOwnProperty(effectStat)) player.stats[effectStat] += itemTemplate.effect.value;
             showToast(`${itemTemplate.name} usado! Seu status de ${effectStat.replace('baseAttack', 'Ataque')} aumentou!`);
-            updateUI(); return;
+            updateUI(); 
+            triggerAutoSave();
+            return;
         }
 
         const sourceList = type === 'weapon' ? currentShopStock.weapons : currentShopStock.armors;
@@ -1329,6 +1334,7 @@
             player.inventory[inventoryListName].push(newItem);
             showToast(`Você comprou ${newItem.name}!`);
             updateUI();
+            triggerAutoSave();
         }
     }
 
@@ -1354,7 +1360,9 @@
         player.hp = Math.min(player.hp, newMaxHp);
 
         showToast(`Você equipou ${itemToEquip.name}!`);
-        updateUI(); renderInventory();
+        updateUI(); 
+        renderInventory();
+        triggerAutoSave();
     }
     
     function unequipItem(type) {
@@ -1377,6 +1385,7 @@
         showToast(`${currentlyEquipped.name} desequipado.`);
         updateUI();
         renderInventory();
+        triggerAutoSave();
     }
 
     function sellItem(type, instanceId) {
@@ -1396,6 +1405,7 @@
         showToast(`${itemToSell.name} vendido por $${sellPrice.toLocaleString()}!`);
         updateUI();
         renderInventory();
+        triggerAutoSave();
     }
 
 
@@ -1407,6 +1417,7 @@
         player.xp += Math.round(finalAmount);
         while (player.xp >= player.xpToNextLevel) { levelUp(); }
         updateUI();
+        // Auto-save is triggered by levelUp or other calling functions
     }
 
     function levelUp() {
@@ -1418,6 +1429,7 @@
         soundManager.play('levelUp');
         showToast(`Nível ${player.level}! +5 Pontos de Atributo!`, 'success');
         updatePlayerLeaderboardData();
+        triggerAutoSave();
     }
 
     function refineItem(type) {
@@ -1444,6 +1456,7 @@
         }
         updateUI();
         renderInventory();
+        triggerAutoSave();
     }
 
     // --- LÓGICA DE BATALHA ---
@@ -1455,6 +1468,7 @@
         }
 
         player.energy -= energyCost;
+        triggerAutoSave();
 
         currentEnemy = JSON.parse(JSON.stringify(enemyObject));
         currentEnemy.baseHp = enemyObject.hp; 
@@ -1653,6 +1667,7 @@
         const previousScreen = bosses.some(b => b.id === currentEnemy.id) ? 'bosses' : 'enemies';
         currentEnemy = null;
         updateUI(); 
+        triggerAutoSave();
         
         setTimeout(() => {
             showModal(modalTitle, modalContent, () => showScreen(previousScreen));
@@ -2826,7 +2841,7 @@
         if (autoSaveTimeout) {
             clearTimeout(autoSaveTimeout);
         }
-        autoSaveTimeout = setTimeout(() => saveGame(false), 2000); // Salva 2 segundos após a última ação
+        autoSaveTimeout = setTimeout(() => saveGame(false), 3000); // Salva 3 segundos após a última ação
     }
     
     async function loadGame() {
@@ -3078,5 +3093,4 @@
 
 </body>
 </html>
-
 
