@@ -222,22 +222,36 @@
                             <button onclick="setDistributionAmount(100)" class="dist-btn p-2 rounded-md font-bold" data-amount="100">x100</button>
                             <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
                         </div>
-                        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
-                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xl">
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
                                     <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
                                     <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                                 </div>
-                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-heart-pulse text-red-400"></i> HP Bônus: <strong id="stat-hpBonus">0</strong></span>
+                                    <button onclick="spendPoint('hpBonus')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-hpBonus" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                </div>
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
                                     <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
                                     <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                                 </div>
-                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
                                     <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
                                     <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                                 </div>
-                                <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
                                     <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
                                     <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                </div>
+                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                    <span><i class="fas fa-crosshairs text-yellow-400"></i> Dano Crítico: <strong id="stat-criticalDamage">0</strong>%</span>
+                                    <button onclick="spendPoint('criticalDamage')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
+                                    <div id="tooltip-criticalDamage" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
                                 </div>
                         </div>
                         <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
@@ -319,7 +333,7 @@
             </div>
 
              <!-- TELA DE COMBATE -->
-            <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden"><h2 class="text-3xl font-bold mb-2 text-center text-red-500 uppercase">Combate!</h2><div class="flex flex-col md:flex-row justify-around items-center md:items-start text-center"><div class="w-full md:w-1/2 p-4 relative"><h3 id="battle-player-name" class="text-3xl font-bold text-yellow-400"></h3><img id="battle-player-img" src="" alt="Jogador" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-yellow-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-player-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-player-hp-text" class="text-lg mt-1"></p></div><div class="w-full md:w-1/2 p-4 relative"><h3 id="battle-enemy-name" class="text-3xl font-bold text-red-400"></h3><img id="battle-enemy-img" src="" alt="Inimigo" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-red-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-enemy-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-enemy-hp-text" class="text-lg mt-1"></p></div></div><div id="battle-controls" class="text-center"><button id="skip-battle-btn" onclick="skipBattle()" class="btn-game bg-gray-600 text-white font-bold py-2 px-6 text-xl rounded-lg uppercase">Pular Batalha <i class="fas fa-forward"></i></button></div><div id="battle-log" class="mt-4 p-2 bg-black bg-opacity-50 rounded h-32 overflow-y-auto text-center text-lg"></div></div>
+            <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden"><h2 class="text-3xl font-bold mb-2 text-center text-red-500 uppercase">Combate!</h2><div class="flex flex-col md:flex-row justify-around items-center md:items-start text-center"><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-player-name" class="text-3xl font-bold text-yellow-400"></h3><img id="battle-player-img" src="" alt="Jogador" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-yellow-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-player-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-player-hp-text" class="text-lg mt-1"></p></div><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-enemy-name" class="text-3xl font-bold text-red-400"></h3><img id="battle-enemy-img" src="" alt="Inimigo" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-red-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-enemy-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-enemy-hp-text" class="text-lg mt-1"></p></div></div><div id="battle-controls" class="text-center"><button id="skip-battle-btn" onclick="skipBattle()" class="btn-game bg-gray-600 text-white font-bold py-2 px-6 text-xl rounded-lg uppercase">Pular Batalha <i class="fas fa-forward"></i></button></div><div id="battle-log" class="mt-4 p-2 bg-black bg-opacity-50 rounded h-32 overflow-y-auto text-center text-lg"></div></div>
             
             <!-- TELA ADMIN -->
             <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
@@ -589,12 +603,12 @@
             energy: 100, maxEnergy: 100, lastEnergyRegenTime: null,
             xp: 0, xpToNextLevel: 100, baseAttack: 5, skillPoints: 0,
             stats: { 
-                defense: 0, luck: 1, agility: 1,
+                defense: 0, luck: 1, agility: 1, hpBonus: 0, criticalDamage: 0,
                 enemiesKilled: 0, totalMoneyEarned: 500, highestRefine: 0,
                 totalPatrolTime: 0
             },
-            weapon: { id: 0, name: "Punhos", baseDamage: 2, price: 0, image: "https://placehold.co/200x200/222222/888888?text=Punhos", refineLevel: 0, instanceId: -1, rarity: "COMUM" },
-            armor: { id: 0, name: "Roupas Velhas", price: 0, image: "https://placehold.co/200x200/222222/888888?text=Roupas", stats: { defense: 0, hp: 0, luck: 0, agility: 0 }, refineLevel: 0, instanceId: -1, rarity: "COMUM" },
+            weapon: { id: 0, name: "Punhos", baseDamage: 2, price: 0, image: "https://placehold.co/200x200/222222/888888?text=Punhos", refineLevel: 0, instanceId: -1, rarity: "COMUM", stats: { criticalDamage: 0 } },
+            armor: { id: 0, name: "Roupas Velhas", price: 0, image: "https://placehold.co/200x200/222222/888888?text=Roupas", stats: { defense: 0, hp: 0, luck: 0, agility: 0, criticalDamage: 0 }, refineLevel: 0, instanceId: -1, rarity: "COMUM" },
             inventory: { weapons: [], armors: [], consumables: { refinementStones: 10 } },
             avatar: AVATARS.male,
             activeMission: null, missionProgress: {}, statusEffects: {},
@@ -836,27 +850,42 @@
         return baseDamage + bonusDamage;
     }
 
-    function getTotalArmorStats(armor) {
-        const refineLevel = armor.refineLevel || 0;
-        const baseStats = armor.stats || { defense: 0, hp: 0, luck: 0, agility: 0 };
-        const bonusDef = Math.round(baseStats.defense * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
-        const bonusHp = Math.round(baseStats.hp * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+    function getTotalWeaponStats(weapon) {
+        if (!weapon || !weapon.stats) return { criticalDamage: 0 };
+        const refineLevel = weapon.refineLevel || 0;
+        const baseStats = weapon.stats;
+        const bonusCrit = Math.round((baseStats.criticalDamage || 0) * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
         return {
-            defense: baseStats.defense + bonusDef,
-            hp: baseStats.hp + bonusHp,
+            criticalDamage: (baseStats.criticalDamage || 0) + bonusCrit,
+        }
+    }
+
+    function getTotalArmorStats(armor) {
+        if (!armor || !armor.stats) return { defense: 0, hp: 0, luck: 0, agility: 0, criticalDamage: 0 };
+        const refineLevel = armor.refineLevel || 0;
+        const baseStats = armor.stats;
+        const bonusDef = Math.round((baseStats.defense || 0) * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+        const bonusHp = Math.round((baseStats.hp || 0) * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+        const bonusCrit = Math.round((baseStats.criticalDamage || 0) * refineLevel * ARMOR_STAT_PERCENT_PER_LEVEL);
+        return {
+            defense: (baseStats.defense || 0) + bonusDef,
+            hp: (baseStats.hp || 0) + bonusHp,
             luck: (armor.stats.luck || 0),
-            agility: (armor.stats.agility || 0)
+            agility: (armor.stats.agility || 0),
+            criticalDamage: (baseStats.criticalDamage || 0) + bonusCrit
         }
     }
 
     function getPlayerTotalStats() {
-        if (!player || !player.armor) return { maxHp: 100, defense: 0, luck: 1, agility: 1 };
+        if (!player || !player.armor) return { maxHp: 100, defense: 0, luck: 1, agility: 1, criticalDamage: 0 };
         const totalArmorStats = getTotalArmorStats(player.armor);
+        const totalWeaponStats = getTotalWeaponStats(player.weapon);
         return {
-            maxHp: 100 + totalArmorStats.hp,
+            maxHp: 100 + totalArmorStats.hp + (player.stats.hpBonus || 0),
             defense: (player.stats.defense || 0) + totalArmorStats.defense,
             luck: (player.stats.luck || 1) + totalArmorStats.luck,
-            agility: (player.stats.agility || 1) + totalArmorStats.agility
+            agility: (player.stats.agility || 1) + totalArmorStats.agility,
+            criticalDamage: (player.stats.criticalDamage || 0) + totalArmorStats.criticalDamage + totalWeaponStats.criticalDamage
         };
     }
 
@@ -894,9 +923,11 @@
         
         document.getElementById('skill-points').innerText = player.skillPoints;
         document.getElementById('stat-attack').innerText = player.baseAttack;
+        document.getElementById('stat-hpBonus').innerText = player.stats.hpBonus;
         document.getElementById('stat-defense').innerText = totalStats.defense;
         document.getElementById('stat-luck').innerText = totalStats.luck;
         document.getElementById('stat-agility').innerText = totalStats.agility;
+        document.getElementById('stat-criticalDamage').innerText = totalStats.criticalDamage;
 
         document.querySelectorAll('.btn-stat').forEach(btn => btn.disabled = player.skillPoints <= 0);
 
@@ -908,6 +939,27 @@
         } else {
              document.getElementById('mission-status').innerText = "Nenhuma missão ativa.";
         }
+        updateTooltips();
+    }
+
+    function updateTooltips() {
+        const totalStats = getPlayerTotalStats();
+
+        const baseDmg = player.baseAttack + getTotalWeaponDamage(player.weapon);
+        document.getElementById('tooltip-attack').innerHTML = `Seu dano base em combate.`;
+
+        document.getElementById('tooltip-hpBonus').innerHTML = `Aumenta seus pontos de vida máximos diretamente.`;
+        
+        const damageReduction = ((totalStats.defense / (totalStats.defense + 100)) * 100).toFixed(1);
+        document.getElementById('tooltip-defense').innerHTML = `Reduz o dano recebido em ${damageReduction}%.`;
+        
+        const critChance = Math.min(80, totalStats.luck * 0.5).toFixed(1);
+        document.getElementById('tooltip-luck').innerHTML = `Chance de Acerto Crítico: ${critChance}% (Máx 80%).`;
+        
+        const dodgeChance = Math.min(75, totalStats.agility * 0.4).toFixed(1);
+        document.getElementById('tooltip-agility').innerHTML = `Chance de Esquiva: ${dodgeChance}% (Máx 75%).`;
+
+        document.getElementById('tooltip-criticalDamage').innerHTML = `Aumenta o multiplicador de dano em acertos críticos. Multiplicador atual: ${(1.5 + (totalStats.criticalDamage / 100)).toFixed(2)}x`;
     }
 
     // --- RENDERIZAÇÃO DE CONTEÚDO DINÂMICO ---
@@ -1502,9 +1554,11 @@
 
         let playerDamage = Math.max(1, (player.baseAttack + getTotalWeaponDamage(player.weapon)) - finalEnemyDefense);
         
-        let isCrit = Math.random() * 100 < totalStats.luck;
+        const critChance = Math.min(80, totalStats.luck * 0.5);
+        let isCrit = Math.random() * 100 < critChance;
+
         if (isCrit) {
-            playerDamage *= 1.5;
+            playerDamage *= (1.5 + (totalStats.criticalDamage / 100)); // Dano crítico base de 150% + bônus
             soundManager.play('crit');
             triggerScreenShake();
         } else {
@@ -1546,7 +1600,8 @@
                 player.statusEffects.invincibility--;
                 animateDamage(0, 'battle-player-img', false, true);
             } else {
-                let isDodge = Math.random() * 100 < totalStats.agility;
+                const dodgeChance = Math.min(75, totalStats.agility * 0.4);
+                let isDodge = Math.random() * 100 < dodgeChance;
                 let enemyDamage = 0;
                 if(!isDodge) {
                     enemyDamage = Math.max(1, currentEnemy.attack - totalStats.defense);
@@ -1599,32 +1654,32 @@
     function endBattle(playerWon) {
         clearTimeout(battleTimeoutId);
         isBattleInProgress = false;
-        document.getElementById('skip-battle-btn').style.display = 'none';
 
-        let modalTitle, modalContent;
+        const totalStats = getPlayerTotalStats();
+        let battleTurns = 0;
+        const MAX_BATTLE_TURNS = 500; // Safety break for stalemates
 
-        if (playerWon) {
-            const originalEnemy = [...enemies, ...bosses].find(e => e.id === currentEnemy.id);
-            modalTitle = "Vitória!";
-            modalContent = `Você derrotou ${currentEnemy.name}!<br>Recompensas: <span class="text-yellow-400">${currentEnemy.money.toLocaleString()}$</span> e <span class="text-yellow-400">${currentEnemy.xp.toLocaleString()} XP</span>.`;
-
-            player.money += currentEnemy.money;
-            player.stats.totalMoneyEarned += currentEnemy.money;
-            addXP(currentEnemy.xp);
-            player.hp = player.maxHp;
-            player.stats.enemiesKilled++;
-            
-            if (bosses.some(b => b.id === currentEnemy.id)) {
-                player.bossCooldowns[currentEnemy.id] = new Date().getTime();
+        while (player.hp > 0 && currentEnemy.hp > 0 && battleTurns < MAX_BATTLE_TURNS) {
+            // Player turn
+            let playerDamage = Math.max(1, (player.baseAttack + getTotalWeaponDamage(player.weapon)) - (currentEnemy.defense || 0));
+            const critChance = Math.min(80, totalStats.luck * 0.5);
+            if (Math.random() * 100 < critChance) {
+                playerDamage *= (1.5 + (totalStats.criticalDamage / 100));
             }
-            
-            if (originalEnemy.drops) {
-                originalEnemy.drops.forEach(drop => {
-                    if (Math.random() * 100 < drop.chance) {
-                        if (drop.type === 'refinementStones') {
-                             player.inventory.consumables.refinementStones += drop.amount;
-                             modalContent += `<br>Você encontrou <span class="text-cyan-400">${drop.amount} Pedra(s) de Refinamento</span>!`;
-                        } else if (drop.type === 'equipment') {
+            currentEnemy.hp -= playerDamage;
+            if (currentEnemy.hp <= 0) break;
+
+            // Enemy turn
+            const dodgeChance = Math.min(75, totalStats.agility * 0.4);
+            if (Math.random() * 100 > dodgeChance) {
+                let eDmg = Math.max(1, currentEnemy.attack - totalStats.defense);
+                player.hp -= eDmg;
+            }
+            battleTurns++;
+        }
+        
+        if (battleTurns >= MAX_BATTLE_TURNS) {
+            console.warn("Batalha pulada excedeu o limite de turnos.");
                             const itemPool = [...weapons, ...armors];
                             const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
                             
@@ -3093,4 +3148,5 @@
 
 </body>
 </html>
+
 
