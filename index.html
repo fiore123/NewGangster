@@ -103,6 +103,7 @@
         .damage-text.crit { color: yellow; font-size: 3rem; }
         .damage-text.dodge { color: cyan; font-size: 2rem; }
         .damage-text.heal { color: limegreen; }
+        .damage-text.poison { color: darkorchid; font-size: 1.8rem;}
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
@@ -223,26 +224,26 @@
                             <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
                         </div>
                         <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
-                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                    <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
-                                    <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
-                                    <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                                </div>
-                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                    <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
-                                    <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
-                                    <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                                </div>
-                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                    <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
-                                    <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
-                                    <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                                </div>
-                                <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                    <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
-                                    <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
-                                    <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                                </div>
+                                 <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                     <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
+                                     <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
+                                     <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                 </div>
+                                 <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                     <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
+                                     <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
+                                     <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                 </div>
+                                 <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                     <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
+                                     <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
+                                     <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                 </div>
+                                 <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                     <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
+                                     <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
+                                     <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                 </div>
                         </div>
                         <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
                         <p id="mission-status" class="text-lg my-2">Nenhuma missão ativa.</p>
@@ -253,13 +254,13 @@
             <!-- TELA DE MISSÕES -->
             <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
                  <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                    <h2 class="text-3xl font-bold">Quadro de Missões</h2>
-                    <div id="missions-refresh-container" class="text-right">
-                        <!-- Conteúdo do botão de atualizar será gerado aqui -->
-                    </div>
-                </div>
-                <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
-                <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                     <h2 class="text-3xl font-bold">Quadro de Missões</h2>
+                     <div id="missions-refresh-container" class="text-right">
+                         <!-- Conteúdo do botão de atualizar será gerado aqui -->
+                     </div>
+                 </div>
+                 <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
+                 <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
             
              <!-- TELA DE GANGUE -->
@@ -311,12 +312,12 @@
              <!-- TELA DE INIMIGOS -->
             <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
                  <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                    <h2 class="text-3xl font-bold">Escolha seu Alvo</h2>
-                    <div id="enemies-refresh-container" class="text-right">
-                        <!-- Conteúdo do botão de atualizar será gerado aqui -->
-                    </div>
-                </div>
-                <div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                     <h2 class="text-3xl font-bold">Escolha seu Alvo</h2>
+                     <div id="enemies-refresh-container" class="text-right">
+                         <!-- Conteúdo do botão de atualizar será gerado aqui -->
+                     </div>
+                 </div>
+                 <div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
 
             <!-- TELA DE CHEFES -->
@@ -340,7 +341,7 @@
                 <div id="shop-potions" class="shop-category grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
             </div>
 
-             <!-- TELA DE COMBATE -->
+              <!-- TELA DE COMBATE -->
             <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden"><h2 class="text-3xl font-bold mb-2 text-center text-red-500 uppercase">Combate!</h2><div class="flex flex-col md:flex-row justify-around items-center md:items-start text-center"><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-player-name" class="text-3xl font-bold text-yellow-400"></h3><img id="battle-player-img" src="" alt="Jogador" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-yellow-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-player-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-player-hp-text" class="text-lg mt-1"></p></div><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-enemy-name" class="text-3xl font-bold text-red-400"></h3><img id="battle-enemy-img" src="" alt="Inimigo" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-red-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-enemy-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-enemy-hp-text" class="text-lg mt-1"></p></div></div><div id="battle-controls" class="text-center"><button id="skip-battle-btn" onclick="skipBattle()" class="btn-game bg-gray-600 text-white font-bold py-2 px-6 text-xl rounded-lg uppercase">Pular Batalha <i class="fas fa-forward"></i></button></div><div id="battle-log" class="mt-4 p-2 bg-black bg-opacity-50 rounded h-32 overflow-y-auto text-center text-lg"></div></div>
             
             <!-- TELA ADMIN -->
@@ -402,11 +403,18 @@
                                         <option value="armorBreak">Quebrar Armadura</option>
                                         <option value="damageReflection">Refletir Dano</option>
                                         <option value="lastStand">Último Suspiro</option>
+                                        <option value="poison">Veneno</option>
+                                        <option value="berserk">Frenesi</option>
+                                        <option value="regeneration">Regeneração</option>
+                                        <option value="execute">Executar</option>
+                                        <option value="goldDigger">Mercenário</option>
+                                        <option value="thorns">Espinhos</option>
                                     </select>
                                 </div>
-                                <div class="flex flex-col"><label>Chance (%)</label><input id="admin-create-ability-chance" type="number" value="25"></div>
-                                <div class="flex flex-col"><label>Valor / Duração</label><input id="admin-create-ability-value" type="number" value="0.5"></div>
-                                <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ability-desc" type="text" placeholder="Descrição da habilidade"></div>
+                                <div class="flex flex-col"><label>Chance (%) / Limiar HP (%)</label><input id="admin-create-ability-chance" type="number" value="25"></div>
+                                <div class="flex flex-col"><label>Valor / Dano / Multiplicador</label><input id="admin-create-ability-value" type="number" value="0.5"></div>
+                                <div class="flex flex-col"><label>Duração (turnos)</label><input id="admin-create-ability-duration" type="number" value="3"></div>
+                                <div class="col-span-full"><label>Descrição</label><input id="admin-create-ability-desc" type="text" placeholder="Descrição da habilidade"></div>
                             </div>
                         </div>
                         <button onclick="adminCreateItem()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar e Adicionar ao JSON</button>
@@ -446,17 +454,17 @@
                 <div id="admin-achievement-creator" class="admin-creator">
                      <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Conquistas</h3>
                      <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
-                         <div class="flex flex-col"><label>Nome</label><input id="admin-create-ach-name" type="text" placeholder="Nome da Conquista"></div>
-                         <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ach-desc" type="text" placeholder="Descrição"></div>
-                         <div class="flex flex-col"><label>Ícone (Font Awesome)</label><input id="admin-create-ach-icon" type="text" value="fa-star"></div>
-                         <div class="flex flex-col"><label>Tipo de Objetivo</label><select id="admin-create-ach-goal-type"></select></div>
-                         <div class="flex flex-col"><label>Estatística</label><select id="admin-create-ach-goal-stat"></select></div>
-                         <div class="flex flex-col"><label>Valor do Objetivo</label><input id="admin-create-ach-goal-value" type="number" value="100"></div>
-                         <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-ach-reward-xp" type="number" value="100"></div>
-                         <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-ach-reward-money" type="number" value="500"></div>
-                          <div class="flex flex-col"><label>Recompensa (Pedras)</label><input id="admin-create-ach-reward-stones" type="number" value="0"></div>
-                          <div class="flex flex-col"><label>Recompensa (Pontos)</label><input id="admin-create-ach-reward-sp" type="number" value="0"></div>
-                         <div class="col-span-full"><button onclick="adminCreateAchievement()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Conquista</button></div>
+                          <div class="flex flex-col"><label>Nome</label><input id="admin-create-ach-name" type="text" placeholder="Nome da Conquista"></div>
+                          <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ach-desc" type="text" placeholder="Descrição"></div>
+                          <div class="flex flex-col"><label>Ícone (Font Awesome)</label><input id="admin-create-ach-icon" type="text" value="fa-star"></div>
+                          <div class="flex flex-col"><label>Tipo de Objetivo</label><select id="admin-create-ach-goal-type"></select></div>
+                          <div class="flex flex-col"><label>Estatística</label><select id="admin-create-ach-goal-stat"></select></div>
+                          <div class="flex flex-col"><label>Valor do Objetivo</label><input id="admin-create-ach-goal-value" type="number" value="100"></div>
+                          <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-ach-reward-xp" type="number" value="100"></div>
+                          <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-ach-reward-money" type="number" value="500"></div>
+                           <div class="flex flex-col"><label>Recompensa (Pedras)</label><input id="admin-create-ach-reward-stones" type="number" value="0"></div>
+                           <div class="flex flex-col"><label>Recompensa (Pontos)</label><input id="admin-create-ach-reward-sp" type="number" value="0"></div>
+                          <div class="col-span-full"><button onclick="adminCreateAchievement()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Conquista</button></div>
                     </div>
                 </div>
 
@@ -551,14 +559,14 @@
                     </div>
                 </div>
                  <div class="mt-8">
-                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controle de Eventos Globais</h3>
-                    <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <label for="admin-event-doubleXp" class="text-lg">Ativar Evento de XP em Dobro?</label>
-                            <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
-                        </div>
-                        <button onclick="adminUpdateEvents()" class="btn-game bg-orange-700 px-4 py-2 rounded-md self-end">Atualizar Eventos</button>
-                    </div>
+                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controle de Eventos Globais</h3>
+                     <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                         <div class="flex items-center gap-2">
+                             <label for="admin-event-doubleXp" class="text-lg">Ativar Evento de XP em Dobro?</label>
+                             <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
+                         </div>
+                         <button onclick="adminUpdateEvents()" class="btn-game bg-orange-700 px-4 py-2 rounded-md self-end">Atualizar Eventos</button>
+                     </div>
                  </div>
             </div>
 
@@ -622,6 +630,7 @@
             activeMission: null, missionProgress: {}, statusEffects: {},
             itemInstanceCounter: 0,
             dailyReward: { lastLoginDate: null, loginStreak: 0 },
+            dailyRefreshes: { lastRefreshDate: null, count: 0 },
             achievements: [],
             offlinePatrol: { active: false, startTime: null },
             bossCooldowns: {},
@@ -710,13 +719,15 @@
 
         if (screenId === 'inventory') renderInventory();
         if (screenId === 'admin') { populateAdminSelectors(); showAdminCreator('item-creator'); loadAdminEventStatus(); adminRenderPlayerManager(); }
-        if (screenId === 'enemies') renderEnemies();
         if (screenId === 'bosses') renderBosses();
-        if (screenId === 'shop') { generateShopStock(); renderShop(); }
-        if (screenId === 'missions') renderMissions();
         if (screenId === 'achievements') renderAchievements();
         if (screenId === 'gang') renderGangScreen();
         if (screenId === 'leaderboard') renderLeaderboard('level');
+
+        // Modificações para o sistema de Atualizar
+        if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons(); }
+        if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons(); }
+        if (screenId === 'missions') { renderMissions(); renderRefreshButtons(); }
     }
 
     function showToast(message, type = 'success') {
@@ -777,6 +788,89 @@
         container.classList.add('screen-shake');
         setTimeout(() => container.classList.remove('screen-shake'), 200);
     }
+    
+    // --- NOVO: FUNÇÕES DO SISTEMA DE ATUALIZAR ---
+    function checkAndResetDailyRefreshes() {
+        if (!player.dailyRefreshes) {
+            player.dailyRefreshes = { lastRefreshDate: null, count: 0 };
+        }
+        const today = new Date().toDateString();
+        if (player.dailyRefreshes.lastRefreshDate !== today) {
+            player.dailyRefreshes.lastRefreshDate = today;
+            player.dailyRefreshes.count = 0;
+            console.log("Contador de atualizações diárias resetado.");
+        }
+    }
+
+    function renderRefreshButtons() {
+        checkAndResetDailyRefreshes();
+        const freeChances = 5;
+        const refreshesUsed = player.dailyRefreshes.count;
+        let costText = '';
+        let cost = 0;
+
+        if (refreshesUsed < freeChances) {
+            const remaining = freeChances - refreshesUsed;
+            costText = `Gratuito (${remaining} restante${remaining > 1 ? 's' : ''})`;
+        } else {
+            cost = (refreshesUsed - (freeChances - 1)) * 5; // Custo progressivo: 5, 10, 15...
+            costText = `<i class="fas fa-gem text-cyan-400"></i> ${cost}`;
+        }
+
+        const isDisabled = player.offlinePatrol.active;
+        const buttonHTML = (type) => `
+            <p class="text-sm mb-1">Atualizações hoje: ${refreshesUsed}</p>
+            <button onclick="refreshList('${type}')" class="btn-game bg-cyan-700 p-2 rounded-md font-bold text-lg" ${isDisabled ? 'disabled' : ''}>
+                <i class="fas fa-sync-alt"></i> Atualizar (${costText})
+            </button>
+            ${isDisabled ? '<p class="text-xs text-yellow-400 mt-1">Indisponível durante patrulha</p>' : ''}
+        `;
+
+        const shopContainer = document.getElementById('shop-refresh-container');
+        if (shopContainer) shopContainer.innerHTML = buttonHTML('shop');
+        
+        const enemiesContainer = document.getElementById('enemies-refresh-container');
+        if (enemiesContainer) enemiesContainer.innerHTML = buttonHTML('enemies');
+
+        const missionsContainer = document.getElementById('missions-refresh-container');
+        if (missionsContainer) missionsContainer.innerHTML = buttonHTML('missions');
+    }
+
+    function refreshList(type) {
+        checkAndResetDailyRefreshes();
+
+        const freeChances = 5;
+        const refreshesUsed = player.dailyRefreshes.count;
+        let cost = 0;
+
+        if (refreshesUsed >= freeChances) {
+            cost = (refreshesUsed - (freeChances - 1)) * 5;
+            if (player.gold < cost) {
+                showToast("Barras de Ouro insuficientes!", 'error');
+                return;
+            }
+            player.gold -= cost;
+        }
+
+        player.dailyRefreshes.count++;
+        showToast("Lista atualizada!", "success");
+
+        if (type === 'shop') {
+            currentShopStock = null;
+            generateShopStock();
+            renderShop();
+        } else if (type === 'enemies') {
+            renderEnemies();
+        } else if (type === 'missions') {
+            // As missões já são geradas de forma aleatória em `renderMissions`
+            renderMissions();
+        }
+        
+        renderRefreshButtons(); 
+        updateUI();
+        triggerAutoSave();
+    }
+
 
     // --- CÁLCULOS DO JOGO ---
     function getRandomRarity() {
@@ -955,9 +1049,11 @@
         currentShopStock = { weapons: [], armors: [] };
         const playerLevel = player.level;
         
-        const itemPool = [...weapons, ...armors];
+        // Pega uma amostra aleatória de itens para a loja
+        const weaponPool = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const armorPool = [...armors].sort(() => 0.5 - Math.random()).slice(0, 4);
 
-        itemPool.forEach(template => {
+        weaponPool.forEach(template => {
             const item = getScaledItem(template, playerLevel);
             const rarity = getRandomRarity();
             const finalItem = applyRarityToItem(item, rarity);
@@ -967,11 +1063,19 @@
                 finalItem.goldPrice = Math.ceil(finalItem.price / 150);
             }
 
-            if (finalItem.hasOwnProperty('baseDamage')) {
-                currentShopStock.weapons.push(finalItem);
-            } else {
-                currentShopStock.armors.push(finalItem);
+            currentShopStock.weapons.push(finalItem);
+        });
+
+        armorPool.forEach(template => {
+            const item = getScaledItem(template, playerLevel);
+            const rarity = getRandomRarity();
+            const finalItem = applyRarityToItem(item, rarity);
+            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`; // Unique ID
+
+            if (rarity === 'LENDARIO' || rarity === 'BLACKOUT') {
+                finalItem.goldPrice = Math.ceil(finalItem.price / 150);
             }
+             currentShopStock.armors.push(finalItem);
         });
     }
 
@@ -1006,7 +1110,7 @@
         } else if (type === 'armor') {
             statsHtml = Object.entries(item.stats).filter(([, v]) => v !== 0).map(([k, v]) => `<p class="text-blue-300 capitalize">${k}: ${v > 0 ? '+' : ''}${v}</p>`).join('');
              if (item.ability) {
-                statsHtml += `<p class="text-cyan-400 mt-2 text-sm"><i class="fas fa-star"></i> ${item.ability.description}</p>`;
+                 statsHtml += `<p class="text-cyan-400 mt-2 text-sm"><i class="fas fa-star"></i> ${item.ability.description}</p>`;
             }
         } else if (type === 'potion') {
             statsHtml = `<p class="text-purple-400 capitalize">Efeito: +${item.effect.value} ${item.effect.stat.replace('baseAttack', 'Ataque')}</p>`;
@@ -1058,8 +1162,8 @@
         const cost = nextLevel;
         const successChance = Math.max(0, 100 - ((item.refineLevel || 0) * 7));
         const refineDetails = `<div class="mt-2 text-sm text-center">
-                                     <p>Custo: ${cost} Pedra(s) | Chance: ${successChance}%</p>
-                                   </div>`;
+                                         <p>Custo: ${cost} Pedra(s) | Chance: ${successChance}%</p>
+                                       </div>`;
         
         const refineButton = item.id !== 0 && (item.refineLevel || 0) < MAX_REFINE_LEVEL
             ? `<button onclick="refineItem('${type}')" class="btn-game bg-cyan-700 w-full p-2 rounded-md font-bold text-sm">Refinar para +${nextLevel}</button>` 
@@ -1141,8 +1245,16 @@
         container.innerHTML = '';
         
         renderOfflinePatrol();
+        
+        // Seleciona 3 missões aleatórias para exibir
+        const availableMissions = [...missions];
+        const missionCount = Math.min(3, availableMissions.length);
 
-        missions.forEach(m => {
+        for (let i = 0; i < missionCount; i++) {
+            if(availableMissions.length === 0) break;
+
+            const randomIndex = Math.floor(Math.random() * availableMissions.length);
+            const m = availableMissions.splice(randomIndex, 1)[0];
             const scaledMission = getScaledMission(m, player.level);
             let isDisabled = player.activeMission ? 'disabled' : '';
             if (player.offlinePatrol.active) isDisabled = 'disabled';
@@ -1164,7 +1276,7 @@
                     </div>
                     <div class="mt-2">${buttonHtml}</div>
                 </div>`;
-        });
+        }
     }
 
     function renderEnemies() {
@@ -1208,24 +1320,24 @@
             
             if (now > lastDefeat + cooldown) {
                  container.innerHTML += `
-                    <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-red-700">
-                        <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2">
-                        <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
-                        <p class="text-red-400">HP: ${boss.hp.toLocaleString()} | Atk: ${boss.attack.toLocaleString()}</p>
-                        <p class="text-yellow-400">Recompensa: ${boss.xp.toLocaleString()} XP | $${boss.money.toLocaleString()}</p>
-                        <button onclick='startBattle(${JSON.stringify(boss)}, ${ENERGY_COST_PER_FIGHT * 2})' class="mt-2 btn-game bg-red-700 w-full p-2 rounded-md font-bold">Lutar (${ENERGY_COST_PER_FIGHT * 2} <i class="fas fa-bolt"></i>)</button>
-                    </div>`;
+                     <div class="bg-gray-800 p-4 rounded-lg text-center border-2 border-red-700">
+                         <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2">
+                         <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
+                         <p class="text-red-400">HP: ${boss.hp.toLocaleString()} | Atk: ${boss.attack.toLocaleString()}</p>
+                         <p class="text-yellow-400">Recompensa: ${boss.xp.toLocaleString()} XP | $${boss.money.toLocaleString()}</p>
+                         <button onclick='startBattle(${JSON.stringify(boss)}, ${ENERGY_COST_PER_FIGHT * 2})' class="mt-2 btn-game bg-red-700 w-full p-2 rounded-md font-bold">Lutar (${ENERGY_COST_PER_FIGHT * 2} <i class="fas fa-bolt"></i>)</button>
+                     </div>`;
             } else {
                 const remainingTime = (lastDefeat + cooldown) - now;
                 const hours = Math.floor(remainingTime / 3600000);
                 const minutes = Math.floor((remainingTime % 3600000) / 60000);
                 container.innerHTML += `
-                     <div class="bg-gray-900 p-4 rounded-lg text-center border-2 border-red-900 opacity-50">
-                        <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2 filter grayscale">
-                        <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
-                        <p class="text-gray-400 mt-4">Retorna em:</p>
-                        <p class="text-2xl font-bold text-red-500">${hours}h ${minutes}m</p>
-                    </div>`;
+                         <div class="bg-gray-900 p-4 rounded-lg text-center border-2 border-red-900 opacity-50">
+                             <img src="${boss.image}" alt="${boss.name}" class="h-40 w-full object-cover rounded-md mb-2 filter grayscale">
+                             <h3 class="text-xl font-bold">${boss.name} <span class="text-yellow-400">[Lvl ${boss.level}]</span></h3>
+                             <p class="text-gray-400 mt-4">Retorna em:</p>
+                             <p class="text-2xl font-bold text-red-500">${hours}h ${minutes}m</p>
+                         </div>`;
             }
         });
     }
@@ -1510,7 +1622,8 @@
 
         currentEnemy = JSON.parse(JSON.stringify(enemyObject));
         currentEnemy.baseHp = enemyObject.hp; 
-        player.statusEffects = {};
+        currentEnemy.statusEffects = {}; // Reseta efeitos do inimigo
+        player.statusEffects = {}; // Reseta efeitos do jogador
         document.getElementById('battle-player-name').innerText = player.name;
         document.getElementById('battle-player-img').src = player.avatar;
         document.getElementById('battle-enemy-name').innerText = currentEnemy.name;
@@ -1526,20 +1639,36 @@
     function battleTurn() {
         if (!isBattleInProgress) return;
         const totalStats = getPlayerTotalStats();
+
+        // --- EFEITOS DE REGENERAÇÃO/STATUS DO JOGADOR (INÍCIO DO TURNO) ---
+        const armorAbilityRegen = player.armor.ability;
+        if (armorAbilityRegen && armorAbilityRegen.type === "regeneration" && player.hp < player.maxHp) {
+             const healedAmount = Math.min(armorAbilityRegen.value, player.maxHp - player.hp);
+             player.hp += healedAmount;
+             logBattle(`<span class="text-green-400">HABILIDADE: Você regenerou ${healedAmount} de vida!</span>`);
+             animateDamage(healedAmount, 'battle-player-img', false, false, true);
+        }
         
         // --- ATAQUE DO JOGADOR ---
         let finalEnemyDefense = currentEnemy.defense || 0;
         const weaponAbility = player.weapon.ability;
+        const armorAbility = player.armor.ability;
         
         soundManager.play('attack');
 
         if (weaponAbility && weaponAbility.type === "armorBreak" && Math.random() * 100 < weaponAbility.chance) {
             finalEnemyDefense *= (1 - weaponAbility.value);
-            logBattle(`HABILIDADE: Você quebrou a armadura do inimigo!`);
+            logBattle(`<span class="text-yellow-400">HABILIDADE: Você quebrou a armadura do inimigo!</span>`);
         }
 
         let playerDamage = Math.max(1, (player.baseAttack + getTotalWeaponDamage(player.weapon)) - finalEnemyDefense);
         
+        // Habilidade Berserk
+        if (armorAbility && armorAbility.type === "berserk" && (player.hp / player.maxHp) < armorAbility.threshold) {
+             playerDamage *= armorAbility.value;
+             logBattle(`<span class="text-red-500">FRENESI: Seu dano aumenta!</span>`);
+        }
+
         const critChance = Math.min(80, totalStats.luck * 0.5);
         let isCrit = Math.random() * 100 < critChance;
 
@@ -1550,68 +1679,74 @@
         } else {
             soundManager.play('hit');
         }
+        playerDamage = Math.round(playerDamage);
         currentEnemy.hp = Math.max(0, currentEnemy.hp - playerDamage);
-        logBattle(`Você ${isCrit ? 'CRITICOU' : 'atacou'} e causou ${Math.round(playerDamage)} de dano.`);
+        logBattle(`Você ${isCrit ? 'CRITICOU' : 'atacou'} e causou ${playerDamage} de dano.`);
         animateDamage(playerDamage, 'battle-enemy-img', isCrit, false);
         
+        // Habilidades pós-ataque
         if (weaponAbility && Math.random() * 100 < weaponAbility.chance) {
-            if (weaponAbility.type === "invincibility" && !player.statusEffects.invincibility) {
-                player.statusEffects.invincibility = weaponAbility.duration;
-                logBattle(`HABILIDADE: Você se sente invencível!`);
-            }
             if (weaponAbility.type === "lifesteal") {
                 const healedAmount = Math.round(playerDamage * weaponAbility.value);
                 player.hp = Math.min(player.maxHp, player.hp + healedAmount);
-                logBattle(`HABILIDADE: Você roubou ${healedAmount} de vida!`);
+                logBattle(`<span class="text-green-400">HABILIDADE: Você roubou ${healedAmount} de vida!</span>`);
                 animateDamage(healedAmount, 'battle-player-img', false, false, true);
             }
-            if (weaponAbility.type === "stun") {
-                currentEnemy.statusEffects = currentEnemy.statusEffects || {};
-                currentEnemy.statusEffects.stunned = weaponAbility.duration;
-                logBattle(`HABILIDADE: Você atordoou ${currentEnemy.name}!`);
+            if (weaponAbility.type === "poison") {
+                 currentEnemy.statusEffects.poison = { damage: weaponAbility.value, turns: weaponAbility.duration };
+                 logBattle(`<span class="text-purple-400">HABILIDADE: Você envenenou ${currentEnemy.name}!</span>`);
             }
         }
+        
+        // Habilidade de Executar
+        if (weaponAbility && weaponAbility.type === 'execute' && currentEnemy.hp > 0 && (currentEnemy.hp / currentEnemy.baseHp) < weaponAbility.threshold) {
+            if (Math.random() * 100 < weaponAbility.chance) {
+                logBattle(`<span class="text-red-700">HABILIDADE: EXECUTADO!</span>`);
+                currentEnemy.hp = 0;
+            }
+        }
+
 
         updateBattleUI();
         if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
 
-        // --- ATAQUE DO INIMIGO ---
+        // --- TURNO DO INIMIGO ---
         battleTimeoutId = setTimeout(() => {
-            currentEnemy.statusEffects = currentEnemy.statusEffects || {};
-            if (currentEnemy.statusEffects.stunned > 0) {
-                 logBattle(`${currentEnemy.name} está atordoado e não pode atacar!`);
-                 currentEnemy.statusEffects.stunned--;
-            } else if (player.statusEffects.invincibility > 0) {
-                logBattle(`${currentEnemy.name} ataca, mas você está invencível!`);
-                player.statusEffects.invincibility--;
+            // Efeitos de Status no Inimigo (ex: veneno)
+            if (currentEnemy.statusEffects.poison && currentEnemy.statusEffects.poison.turns > 0) {
+                const poisonDamage = currentEnemy.statusEffects.poison.damage;
+                currentEnemy.hp = Math.max(0, currentEnemy.hp - poisonDamage);
+                logBattle(`<span class="text-purple-400">${currentEnemy.name} sofreu ${poisonDamage} de dano de veneno.</span>`);
+                animateDamage(poisonDamage, 'battle-enemy-img', false, false, false, true); // Nova flag para veneno
+                currentEnemy.statusEffects.poison.turns--;
+                updateBattleUI();
+                 if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
+            }
+            
+            // Ataque do Inimigo
+            const dodgeChance = Math.min(75, totalStats.agility * 0.4);
+            let isDodge = Math.random() * 100 < dodgeChance;
+            let enemyDamage = 0;
+
+            if(!isDodge) {
+                enemyDamage = Math.max(1, currentEnemy.attack - totalStats.defense);
+                player.hp = Math.max(0, player.hp - enemyDamage);
+                logBattle(`${currentEnemy.name} atacou e causou ${Math.round(enemyDamage)} de dano.`);
+                soundManager.play('hit');
+                animateDamage(enemyDamage, 'battle-player-img', false, false);
+
+                // Habilidade de Espinhos
+                if (armorAbility && armorAbility.type === "thorns") {
+                    const reflectedDamage = armorAbility.value;
+                    currentEnemy.hp = Math.max(0, currentEnemy.hp - reflectedDamage);
+                    logBattle(`<span class="text-orange-400">HABILIDADE: Espinhos refletiram ${reflectedDamage} de dano!</span>`);
+                    animateDamage(reflectedDamage, 'battle-enemy-img', false, false);
+                    if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
+                }
+
+            } else { 
+                logBattle(`Você ESQUIVOU do ataque!`);
                 animateDamage(0, 'battle-player-img', false, true);
-            } else {
-                const dodgeChance = Math.min(75, totalStats.agility * 0.4);
-                let isDodge = Math.random() * 100 < dodgeChance;
-                let enemyDamage = 0;
-                if(!isDodge) {
-                    enemyDamage = Math.max(1, currentEnemy.attack - totalStats.defense);
-
-                    const armorAbility = player.armor.ability;
-                    if (player.hp - enemyDamage <= 0 && armorAbility && armorAbility.type === 'lastStand' && !player.statusEffects.lastStandUsed) {
-                        enemyDamage = player.hp - 1;
-                        player.statusEffects.lastStandUsed = true;
-                        logBattle(`HABILIDADE: Você sobrevive ao golpe fatal com 1 HP!`);
-                    }
-
-                    player.hp = Math.max(0, player.hp - enemyDamage);
-                    logBattle(`${currentEnemy.name} atacou e causou ${Math.round(enemyDamage)} de dano.`);
-                    soundManager.play('hit');
-
-                    if (armorAbility && armorAbility.type === "damageReflection" && Math.random() * 100 < armorAbility.chance) {
-                        const reflectedDamage = Math.round(enemyDamage * armorAbility.value);
-                        currentEnemy.hp = Math.max(0, currentEnemy.hp - reflectedDamage);
-                        logBattle(`HABILIDADE: Você refletiu ${reflectedDamage} de dano!`);
-                        animateDamage(reflectedDamage, 'battle-enemy-img', false, false);
-                    }
-
-                } else { logBattle(`Você ESQUIVOU do ataque!`); }
-                animateDamage(enemyDamage, 'battle-player-img', false, isDodge);
             }
 
             updateBattleUI();
@@ -1621,6 +1756,7 @@
     }
     
     function skipBattle() {
+        // ... (código existente sem alterações)
         if (!isBattleInProgress) return;
         clearTimeout(battleTimeoutId); isBattleInProgress = false;
         const totalStats = getPlayerTotalStats();
@@ -1647,14 +1783,22 @@
         if (playerWon) {
             const originalEnemy = [...enemies, ...bosses].find(e => e.id === currentEnemy.id);
             modalTitle = "Vitória!";
-            modalContent = `Você derrotou ${currentEnemy.name}!<br>Recompensas: <span class="text-yellow-400">${currentEnemy.money.toLocaleString()}$</span> e <span class="text-yellow-400">${currentEnemy.xp.toLocaleString()} XP</span>.`;
+            
+            let moneyReward = currentEnemy.money;
+            const goldDiggerAbility = player.weapon.ability?.type === 'goldDigger' ? player.weapon.ability : player.armor.ability;
+            if (goldDiggerAbility && goldDiggerAbility.type === 'goldDigger') {
+                 moneyReward = Math.round(moneyReward * goldDiggerAbility.value);
+            }
 
-            player.money += currentEnemy.money;
-            player.stats.totalMoneyEarned += currentEnemy.money;
+            modalContent = `Você derrotou ${currentEnemy.name}!<br>Recompensas: <span class="text-yellow-400">${moneyReward.toLocaleString()}$</span> e <span class="text-yellow-400">${currentEnemy.xp.toLocaleString()} XP</span>.`;
+
+            player.money += moneyReward;
+            player.stats.totalMoneyEarned += moneyReward;
             addXP(currentEnemy.xp);
             player.hp = player.maxHp;
             player.stats.enemiesKilled++;
             
+            // ... (resto do código de endBattle sem alterações)
             if (bosses.some(b => b.id === currentEnemy.id)) {
                 player.bossCooldowns[currentEnemy.id] = new Date().getTime();
             }
@@ -1732,23 +1876,26 @@
         log.innerHTML = `<p>${message}</p>` + log.innerHTML;
     }
 
-    function animateDamage(damage, targetId, isCrit, isDodge, isHeal = false) {
+    function animateDamage(damage, targetId, isCrit, isDodge, isHeal = false, isPoison = false) {
         const target = document.getElementById(targetId);
-        if(!isHeal) target.classList.add('shake');
+        if(!isHeal && !isPoison) target.classList.add('shake');
         const popup = document.createElement('div');
         popup.className = 'damage-text';
         if (isDodge) {
             popup.textContent = 'Esquivou!'; popup.classList.add('dodge');
         } else if (isHeal) {
             popup.textContent = `+${Math.round(damage)}`; popup.classList.add('heal');
-        } else {
+        } else if (isPoison) {
+            popup.textContent = `${Math.round(damage)}`; popup.classList.add('poison');
+        }
+        else {
             popup.textContent = Math.round(damage);
             if (isCrit) popup.classList.add('crit');
         }
         target.parentElement.appendChild(popup);
         setTimeout(() => {
             popup.remove();
-            if(!isHeal) target.classList.remove('shake');
+            if(!isHeal && !isPoison) target.classList.remove('shake');
         }, 1000);
     }
 
@@ -1847,8 +1994,8 @@
 
         let modalTitle = isFromLoad ? "Recompensas de Patrulha Offline" : "Patrulha Finalizada";
         let modalContent = `Você patrulhou por ${Math.floor(effectiveMinutes/60)}h e ${effectiveMinutes % 60}m.<br>Recompensas:<br>
-                                 <span class="text-green-400">${moneyEarned.toLocaleString()} Dinheiro</span><br>
-                                 <span class="text-yellow-400">${xpEarned.toLocaleString()} XP</span>`;
+                                  <span class="text-green-400">${moneyEarned.toLocaleString()} Dinheiro</span><br>
+                                  <span class="text-yellow-400">${xpEarned.toLocaleString()} XP</span>`;
         if (stonesEarned > 0) {
             modalContent += `<br><span class="text-cyan-400">${stonesEarned} Pedra(s) de Refinamento</span>`;
         }
@@ -2069,17 +2216,17 @@
              container.innerHTML = `
                  <p class="text-xl mb-4">Você não está em nenhuma gangue.</p>
                  <div class="flex flex-col md:flex-row gap-4 justify-center">
-                      <div class="bg-gray-800 p-4 rounded-lg flex-1">
-                          <h3 class="text-2xl font-bold text-green-400 mb-2">Criar uma Gangue</h3>
-                          <input type="text" id="gang-name-input" placeholder="Nome da Gangue (Ex: Os Intocáveis)" class="w-full mb-2">
-                          <input type="text" id="gang-tag-input" placeholder="TAG (Ex: INT)" maxlength="5" class="w-full mb-2">
-                          <button onclick="createGang()" class="btn-game bg-green-700 w-full p-2 rounded-md font-bold">Fundar Gangue</button>
-                      </div>
-                      <div class="bg-gray-800 p-4 rounded-lg flex-1">
-                          <h3 class="text-2xl font-bold text-blue-400 mb-2">Entrar em uma Gangue</h3>
-                          <input type="text" id="gang-id-input" placeholder="Cole o ID da Gangue aqui" class="w-full mb-2">
-                          <button onclick="joinGang()" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Juntar-se</button>
-                      </div>
+                       <div class="bg-gray-800 p-4 rounded-lg flex-1">
+                           <h3 class="text-2xl font-bold text-green-400 mb-2">Criar uma Gangue</h3>
+                           <input type="text" id="gang-name-input" placeholder="Nome da Gangue (Ex: Os Intocáveis)" class="w-full mb-2">
+                           <input type="text" id="gang-tag-input" placeholder="TAG (Ex: INT)" maxlength="5" class="w-full mb-2">
+                           <button onclick="createGang()" class="btn-game bg-green-700 w-full p-2 rounded-md font-bold">Fundar Gangue</button>
+                       </div>
+                       <div class="bg-gray-800 p-4 rounded-lg flex-1">
+                           <h3 class="text-2xl font-bold text-blue-400 mb-2">Entrar em uma Gangue</h3>
+                           <input type="text" id="gang-id-input" placeholder="Cole o ID da Gangue aqui" class="w-full mb-2">
+                           <button onclick="joinGang()" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Juntar-se</button>
+                       </div>
                  </div>
              `;
         }
@@ -2552,7 +2699,7 @@
                 itemSelector.appendChild(option);
             });
              if (type === 'potions') {
-                raritySelector.parentElement.style.display = 'none';
+                 raritySelector.parentElement.style.display = 'none';
             }
         }
     }
@@ -2583,9 +2730,14 @@
                 chance: parseFloat(document.getElementById('admin-create-ability-chance').value) || 0,
                 description: document.getElementById('admin-create-ability-desc').value || ''
             };
-            if (abilityType === 'invincibility' || abilityType === 'stun') {
-                newItem.ability.duration = parseInt(document.getElementById('admin-create-ability-value').value) || 1;
-            } else {
+            if (abilityType === 'invincibility' || abilityType === 'stun' || abilityType === 'poison') {
+                newItem.ability.duration = parseInt(document.getElementById('admin-create-ability-duration').value) || 1;
+            }
+            if(abilityType === 'berserk' || abilityType === 'execute') {
+                newItem.ability.threshold = (parseFloat(document.getElementById('admin-create-ability-chance').value) || 0) / 100;
+                newItem.ability.chance = parseFloat(document.getElementById('admin-create-ability-value').value) || 0;
+            }
+            else {
                 newItem.ability.value = parseFloat(document.getElementById('admin-create-ability-value').value) || 0;
             }
         }
@@ -2956,18 +3108,33 @@
                 potions = data.potions || [];
                 document.getElementById('admin-items').value = JSON.stringify(data, null, 2);
             } else {
-                const defaultItems = {
-                     weapons: [
+                 const defaultItems = {
+                    weapons: [
                         { id: 1, name: "Canivete", baseDamage: 8, price: 150, image: "https://placehold.co/200x200/444444/eeeeee?text=Canivete" },
                         { id: 2, name: "Navalha Sanguinária", baseDamage: 12, price: 800, image: "https://placehold.co/200x200/8c0000/ffffff?text=Navalha", ability: { type: "lifesteal", chance: 30, value: 0.5, description: "30% de chance de roubar 50% do dano como vida." } },
-                     ],
-                     armors: [
+                        { id: 3, name: "Soco Inglês", baseDamage: 10, price: 300, image: "https://placehold.co/200x200/cccccc/333333?text=Soco+Inglês"},
+                        { id: 4, name: "Taco com Pregos", baseDamage: 15, price: 1200, image: "https://placehold.co/200x200/8b4513/ffffff?text=Taco", ability: { type: "stun", chance: 15, duration: 1, description: "15% de chance de atordoar o inimigo por 1 turno." }},
+                        { id: 5, name: "Pistola .38", baseDamage: 25, price: 2500, image: "https://placehold.co/200x200/555555/eeeeee?text=.38"},
+                        { id: 6, name: "Faca de Combate", baseDamage: 22, price: 2200, image: "https://placehold.co/200x200/4a5568/ffffff?text=Faca", ability: { type: "poison", chance: 25, value: 10, duration: 3, description: "25% de chance de envenenar, causando 10 de dano por 3 turnos." } },
+                        { id: 7, name: "Escopeta Serrada", baseDamage: 40, price: 5000, image: "https://placehold.co/200x200/3d2c25/ffffff?text=Escopeta" },
+                        { id: 8, name: "Submetralhadora", baseDamage: 35, price: 6500, image: "https://placehold.co/200x200/2d3748/ffffff?text=SMG", ability: {type: "armorBreak", chance: 40, value: 0.5, description: "40% de chance de ignorar 50% da defesa inimiga."}},
+                        { id: 9, name: "Fuzil de Assalto", baseDamage: 55, price: 10000, image: "https://placehold.co/200x200/1a202c/ffffff?text=Fuzil"},
+                        { id: 10, name: "Rifle do Executor", baseDamage: 50, price: 15000, image: "https://placehold.co/200x200/000000/ff0000?text=Rifle", ability: {type: "execute", threshold: 0.2, chance: 15, description: "15% de chance de executar inimigos com menos de 20% de vida."}}
+                    ],
+                    armors: [
                          { id: 1, name: "Jaqueta de Couro", price: 250, image: "https://placehold.co/200x200/5a2727/ffffff?text=Jaqueta", stats: { defense: 3, hp: 20, luck: 0, agility: 0 } },
                          { id: 2, name: "Colete à Prova de Balas", price: 1000, image: "https://placehold.co/200x200/333333/ffffff?text=Colete", stats: { defense: 10, hp: 50, luck: 0, agility: -2 } },
-                     ],
-                     potions: [
+                         { id: 3, name: "Moletom com Capuz", price: 400, image: "https://placehold.co/200x200/4a5568/ffffff?text=Moletom", stats: { defense: 2, hp: 10, luck: 2, agility: 2 }},
+                         { id: 4, name: "Sobretudo Reforçado", price: 1500, image: "https://placehold.co/200x200/2c1e19/ffffff?text=Sobretudo", stats: { defense: 8, hp: 80, luck: 0, agility: -1 }, ability: { type: "thorns", value: 10, description: "Reflete 10 de dano fixo quando atacado." } },
+                         { id: 5, name: "Terno Blindado", price: 5000, image: "https://placehold.co/200x200/1a202c/ffffff?text=Terno", stats: { defense: 15, hp: 100, luck: 5, agility: 0 }},
+                         { id: 6, name: "Uniforme Mercenário", price: 4500, image: "https://placehold.co/200x200/2f4f4f/ffffff?text=Mercenário", stats: { defense: 12, hp: 60, luck: 0, agility: 0 }, ability: { type: "goldDigger", value: 1.2, description: "Ganha 20% a mais de dinheiro em vitórias." }},
+                         { id: 7, name: "Couro do Berserker", price: 3000, image: "https://placehold.co/200x200/8b0000/ffffff?text=Berserker", stats: { defense: 5, hp: 40, luck: 0, agility: 0 }, ability: { type: "berserk", threshold: 0.3, value: 1.5, description: "Abaixo de 30% de vida, seu dano aumenta em 50%." }},
+                         { id: 8, name: "Manto da Regeneração", price: 6000, image: "https://placehold.co/200x200/006400/ffffff?text=Regen", stats: { defense: 10, hp: 120, luck: 0, agility: 0 }, ability: { type: "regeneration", value: 10, description: "Regenera 10 de HP a cada turno." }}
+                    ],
+                    potions: [
                          { id: 1, name: "Anabolizante", price: 500, image: "https://placehold.co/200x200/ff4444/ffffff?text=Força", effect: { stat: 'baseAttack', value: 1 } },
-                     ]
+                         { id: 2, name: "Cimento", price: 500, image: "https://placehold.co/200x200/a9a9a9/ffffff?text=Defesa", effect: { stat: 'defense', value: 1 } }
+                    ]
                 };
                 await window.firebase.setDoc(itemsRef, defaultItems);
                 weapons = defaultItems.weapons;
@@ -2986,9 +3153,28 @@
                  document.getElementById('admin-gameplay').value = JSON.stringify(data, null, 2);
             } else {
                  const defaultGameplay = {
-                    enemies: [ { id: 1, name: "Capanga Novato", hp: 50, attack: 8, xp: 20, money: 50, defense: 0, image: "https://placehold.co/400x400/5a2a27/ffffff?text=Capanga", drops: [{ type: 'refinementStones', chance: 25, amount: 1 }, { type: 'equipment', chance: 5 }] } ],
-                    bosses: [ { id: 101, name: "O Don", hp: 2000, attack: 100, xp: 5000, money: 10000, defense: 50, cooldown: 86400000, image: "https://placehold.co/400x400/000000/ffffff?text=O+DON", drops: [{ type: 'refinementStones', chance: 100, amount: 10 }, { type: 'equipment', chance: 100 }] } ],
-                    missions: [ { id: 1, title: "Limpeza de Rua", description: "Derrote X Capangas Novatos.", reward: { xp: 100, money: 200 }, goal: { type: "kill", enemyId: 1, count: 3 } } ],
+                    enemies: [
+                        { id: 1, name: "Capanga Novato", hp: 50, attack: 8, xp: 20, money: 50, defense: 2, image: "https://placehold.co/400x400/5a2a27/ffffff?text=Capanga", drops: [{ type: 'refinementStones', chance: 25, amount: 1 }, { type: 'equipment', chance: 5 }] },
+                        { id: 2, name: "Viciado", hp: 40, attack: 12, xp: 25, money: 30, defense: 0, image: "https://placehold.co/400x400/808080/ffffff?text=Viciado", drops: [{ type: 'equipment', chance: 7 }] },
+                        { id: 3, name: "Ladrão de Rua", hp: 60, attack: 10, xp: 30, money: 80, defense: 3, image: "https://placehold.co/400x400/4682b4/ffffff?text=Ladrão", drops: [{ type: 'refinementStones', chance: 30, amount: 1 }] },
+                        { id: 4, name: "Membro de Gangue", hp: 100, attack: 15, xp: 50, money: 120, defense: 5, image: "https://placehold.co/400x400/ff4500/ffffff?text=Membro", drops: [{ type: 'refinementStones', chance: 40, amount: 1 }, { type: 'equipment', chance: 10 }] },
+                        { id: 5, name: "Brutamontes", hp: 200, attack: 12, xp: 80, money: 150, defense: 10, image: "https://placehold.co/400x400/696969/ffffff?text=Brutamontes", drops: [{ type: 'refinementStones', chance: 50, amount: 2 }, { type: 'equipment', chance: 12 }] },
+                        { id: 6, name: "Assassino Furtivo", hp: 80, attack: 25, xp: 100, money: 200, defense: 4, image: "https://placehold.co/400x400/2f4f4f/ffffff?text=Assassino", drops: [{ type: 'equipment', chance: 15 }] },
+                        { id: 7, name: "Tenente da Máfia", hp: 300, attack: 30, xp: 250, money: 500, defense: 15, image: "https://placehold.co/400x400/000080/ffffff?text=Tenente", drops: [{ type: 'refinementStones', chance: 70, amount: 3 }, { type: 'equipment', chance: 20 }] }
+                    ],
+                    bosses: [ 
+                        { id: 101, name: "O Don", hp: 2000, attack: 100, xp: 5000, money: 10000, defense: 50, cooldown: 86400000, image: "https://placehold.co/400x400/000000/ffffff?text=O+DON", drops: [{ type: 'refinementStones', chance: 100, amount: 10 }, { type: 'equipment', chance: 100 }] },
+                        { id: 102, name: "O Químico Louco", hp: 1500, attack: 80, xp: 4000, money: 8000, defense: 30, cooldown: 86400000, image: "https://placehold.co/400x400/32cd32/ffffff?text=Químico", drops: [{ type: 'refinementStones', chance: 100, amount: 8 }, { type: 'equipment', chance: 100 }] }
+                    ],
+                    missions: [ 
+                        { id: 1, title: "Limpeza de Rua", reward: { xp: 100, money: 200 }, goal: { type: "kill", enemyId: 1, count: 3 } },
+                        { id: 2, title: "Recuperar o Roubo", reward: { xp: 120, money: 300 }, goal: { type: "kill", enemyId: 3, count: 5 } },
+                        { id: 3, title: "Controle de Território", reward: { xp: 200, money: 500 }, goal: { type: "kill", enemyId: 4, count: 4 } },
+                        { id: 4, title: "Músculos para Aluguel", reward: { xp: 300, money: 600 }, goal: { type: "kill", enemyId: 5, count: 2 } },
+                        { id: 5, title: "Contrato Silencioso", reward: { xp: 400, money: 800 }, goal: { type: "kill", enemyId: 6, count: 3 } },
+                        { id: 6, title: "Enfraquecer a Máfia", reward: { xp: 800, money: 1500 }, goal: { type: "kill", enemyId: 7, count: 1 } },
+                        { id: 7, title: "Praga da Cidade", reward: { xp: 80, money: 150 }, goal: { type: "kill", enemyId: 2, count: 8 } }
+                    ],
                     achievements: [ { id: 1, name: "Primeira Vítima", description: "Derrote 1 inimigo.", icon: "fa-fist-raised", goal: { type: 'stat', stat: 'enemiesKilled', value: 1 }, reward: { money: 100, xp: 50 } } ]
                 };
                 await window.firebase.setDoc(gameplayRef, defaultGameplay);
@@ -3014,20 +3200,11 @@
     // --- INICIALIZAÇÃO ---
     async function initFirebase() {
         try {
-            // !!! IMPORTANTE: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI !!!
-            // Você encontra isso nas "Configurações do projeto" no console do Firebase.
-            const firebaseConfig = {
-                apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
-                authDomain: "new-gangstar-online.firebaseapp.com",
-                projectId: "new-gangstar-online",
-                storageBucket: "new-gangstar-online.firebasestorage.app",
-                messagingSenderId: "126343704437",
-                appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
-            };
+            const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+            const firebaseConfig = JSON.parse(firebaseConfigString);
 
-            // O código abaixo verifica se você colou a configuração.
-            if (!firebaseConfig || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
-                 console.error("Firebase config não encontrada. Cole sua configuração do Firebase na função initFirebase.");
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
+                 console.error("Firebase config não encontrada.");
                  showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
                  document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração: As chaves do Firebase não foram inseridas no código.</p>';
                  return null;
@@ -3037,25 +3214,20 @@
             db = window.firebase.getFirestore(app);
             auth = window.firebase.getAuth(app);
 
-            // Se já houver um usuário, retorna o ID dele
-            if (auth.currentUser) {
-                console.log("Usuário já autenticado:", auth.currentUser.uid);
-                return auth.currentUser.uid;
-            }
-
-            // Se não, faz o login (anônimo ou com token) e espera a confirmação
             return new Promise((resolve) => {
                 const unsubscribe = window.firebase.onAuthStateChanged(auth, (user) => {
                     if (user) {
                         console.log("Usuário autenticado com sucesso:", user.uid);
-                        unsubscribe(); // Para de ouvir depois de confirmar o login
+                        unsubscribe(); 
                         resolve(user.uid);
                     }
                 });
 
                 (async () => {
                     try {
-                        // Neste ambiente, __initial_auth_token não existe, então sempre usará anônimo.
+                        if (auth.currentUser) {
+                           return; // Já está logado, onAuthStateChanged vai resolver.
+                        }
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
                         } else {
@@ -3105,7 +3277,7 @@
         userId = await initFirebase();
         
         if (!userId) {
-            showToast("Falha na autenticação. As funções online não funcionarão.", "error");
+            // A mensagem de erro já é mostrada em initFirebase
             return; 
         }
         
@@ -3121,6 +3293,7 @@
         checkOfflinePatrolRewards(); 
         
         checkDailyReward();
+        checkAndResetDailyRefreshes(); // Verifica os resets diários no carregamento
         
         if (player.name === "Novo Gangster") {
             promptForPlayerName();
