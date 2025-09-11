@@ -630,7 +630,7 @@
             activeMission: null, missionProgress: {}, statusEffects: {},
             itemInstanceCounter: 0,
             dailyReward: { lastLoginDate: null, loginStreak: 0 },
-            dailyRefreshes: { lastRefreshDate: null, count: 0 },
+            dailyRefreshes: { lastRefreshDate: null, shop: 0, missions: 0, enemies: 0 }, // MODIFICADO
             achievements: [],
             offlinePatrol: { active: false, startTime: null },
             bossCooldowns: {},
@@ -724,10 +724,9 @@
         if (screenId === 'gang') renderGangScreen();
         if (screenId === 'leaderboard') renderLeaderboard('level');
 
-        // Modificações para o sistema de Atualizar
-        if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons(); }
-        if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons(); }
-        if (screenId === 'missions') { renderMissions(); renderRefreshButtons(); }
+        if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons('enemies'); }
+        if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons('shop'); }
+        if (screenId === 'missions') { renderMissions(); renderRefreshButtons('missions'); }
     }
 
     function showToast(message, type = 'success') {
@@ -789,23 +788,26 @@
         setTimeout(() => container.classList.remove('screen-shake'), 200);
     }
     
-    // --- NOVO: FUNÇÕES DO SISTEMA DE ATUALIZAR ---
+    // --- FUNÇÕES DO SISTEMA DE ATUALIZAR ---
     function checkAndResetDailyRefreshes() {
-        if (!player.dailyRefreshes) {
-            player.dailyRefreshes = { lastRefreshDate: null, count: 0 };
+        // Migração para saves antigos que usavam um contador único
+        if (!player.dailyRefreshes || typeof player.dailyRefreshes.count !== 'undefined') {
+            player.dailyRefreshes = { lastRefreshDate: null, shop: 0, missions: 0, enemies: 0 };
         }
         const today = new Date().toDateString();
         if (player.dailyRefreshes.lastRefreshDate !== today) {
             player.dailyRefreshes.lastRefreshDate = today;
-            player.dailyRefreshes.count = 0;
-            console.log("Contador de atualizações diárias resetado.");
+            player.dailyRefreshes.shop = 0;
+            player.dailyRefreshes.missions = 0;
+            player.dailyRefreshes.enemies = 0;
+            console.log("Contadores de atualizações diárias resetados.");
         }
     }
 
-    function renderRefreshButtons() {
+    function renderRefreshButtons(type) {
         checkAndResetDailyRefreshes();
         const freeChances = 5;
-        const refreshesUsed = player.dailyRefreshes.count;
+        const refreshesUsed = player.dailyRefreshes[type] || 0;
         let costText = '';
         let cost = 0;
 
@@ -813,12 +815,12 @@
             const remaining = freeChances - refreshesUsed;
             costText = `Gratuito (${remaining} restante${remaining > 1 ? 's' : ''})`;
         } else {
-            cost = (refreshesUsed - (freeChances - 1)) * 5; // Custo progressivo: 5, 10, 15...
+            cost = (refreshesUsed - (freeChances - 1)) * 5;
             costText = `<i class="fas fa-gem text-cyan-400"></i> ${cost}`;
         }
 
         const isDisabled = player.offlinePatrol.active;
-        const buttonHTML = (type) => `
+        const buttonHTML = `
             <p class="text-sm mb-1">Atualizações hoje: ${refreshesUsed}</p>
             <button onclick="refreshList('${type}')" class="btn-game bg-cyan-700 p-2 rounded-md font-bold text-lg" ${isDisabled ? 'disabled' : ''}>
                 <i class="fas fa-sync-alt"></i> Atualizar (${costText})
@@ -826,21 +828,18 @@
             ${isDisabled ? '<p class="text-xs text-yellow-400 mt-1">Indisponível durante patrulha</p>' : ''}
         `;
 
-        const shopContainer = document.getElementById('shop-refresh-container');
-        if (shopContainer) shopContainer.innerHTML = buttonHTML('shop');
-        
-        const enemiesContainer = document.getElementById('enemies-refresh-container');
-        if (enemiesContainer) enemiesContainer.innerHTML = buttonHTML('enemies');
-
-        const missionsContainer = document.getElementById('missions-refresh-container');
-        if (missionsContainer) missionsContainer.innerHTML = buttonHTML('missions');
+        const container = document.getElementById(`${type}-refresh-container`);
+        if (container) {
+            container.innerHTML = buttonHTML;
+        }
     }
+
 
     function refreshList(type) {
         checkAndResetDailyRefreshes();
 
         const freeChances = 5;
-        const refreshesUsed = player.dailyRefreshes.count;
+        const refreshesUsed = player.dailyRefreshes[type] || 0;
         let cost = 0;
 
         if (refreshesUsed >= freeChances) {
@@ -852,7 +851,7 @@
             player.gold -= cost;
         }
 
-        player.dailyRefreshes.count++;
+        player.dailyRefreshes[type]++;
         showToast("Lista atualizada!", "success");
 
         if (type === 'shop') {
@@ -862,11 +861,10 @@
         } else if (type === 'enemies') {
             renderEnemies();
         } else if (type === 'missions') {
-            // As missões já são geradas de forma aleatória em `renderMissions`
             renderMissions();
         }
         
-        renderRefreshButtons(); 
+        renderRefreshButtons(type);
         updateUI();
         triggerAutoSave();
     }
@@ -3316,5 +3314,16 @@
 
 </body>
 </html>
+" selected, the user wants me to do the following: "I love it, but could you please do me a favor? Add a button to mute/unmute all the sounds.".
+I will add a button to the UI to mute and unmute sounds.
 
+**Plan:**
+
+1.  **HTML:** Add a mute/unmute button to the header, near the player's stats. It will have a speaker icon.
+2.  **CSS:** No new CSS should be needed if I use Font Awesome icons.
+3.  **JavaScript:**
+    * **`soundManager` object:** Add a `toggleMute()` method. This will switch the `isMuted` boolean and update the button's icon (e.g., from `fa-volume-up` to `fa-volume-mute`).
+    * **UI Update:** The `toggleMute()` function will also be responsible for updating the button's appearance. I'll create a new function `updateMuteButtonUI()` to handle this.
+    * **Event Listener:** The new button in the HTML will call `soundManager.toggleMute()` when clicked.
+    * **Persistence:** I'll save the `isMuted` state in the player's save data (
 
