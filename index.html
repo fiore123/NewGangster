@@ -3200,8 +3200,16 @@
     // --- INICIALIZAÇÃO ---
     async function initFirebase() {
         try {
-            const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-            const firebaseConfig = JSON.parse(firebaseConfigString);
+            // !!! IMPORTANTE: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI !!!
+            // Você encontra isso nas "Configurações do projeto" no console do Firebase.
+            const firebaseConfig = {
+                apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
+                authDomain: "new-gangstar-online.firebaseapp.com",
+                projectId: "new-gangstar-online",
+                storageBucket: "new-gangstar-online.firebasestorage.app",
+                messagingSenderId: "126343704437",
+                appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
+            };
 
             if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
                  console.error("Firebase config não encontrada.");
@@ -3308,4 +3316,5 @@
 
 </body>
 </html>
+
 
