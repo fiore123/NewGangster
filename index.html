@@ -252,7 +252,12 @@
 
             <!-- TELA DE MISSÕES -->
             <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
-                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Missões</h2>
+                 <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                    <h2 class="text-3xl font-bold">Quadro de Missões</h2>
+                    <div id="missions-refresh-container" class="text-right">
+                        <!-- Conteúdo do botão de atualizar será gerado aqui -->
+                    </div>
+                </div>
                 <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
                 <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
@@ -304,7 +309,15 @@
             </div>
 
              <!-- TELA DE INIMIGOS -->
-            <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Escolha seu Alvo</h2><div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+            <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                 <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                    <h2 class="text-3xl font-bold">Escolha seu Alvo</h2>
+                    <div id="enemies-refresh-container" class="text-right">
+                        <!-- Conteúdo do botão de atualizar será gerado aqui -->
+                    </div>
+                </div>
+                <div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
 
             <!-- TELA DE CHEFES -->
             <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Covil dos Chefes</h2><div id="bosses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
