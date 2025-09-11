@@ -43,7 +43,7 @@
             limit,
             getDocs,
             setLogLevel,
-            deleteDoc // <-- ADICIONADO
+            deleteDoc
         };
     </script>
     <style>
@@ -349,12 +349,13 @@
             <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
                 <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel de Administração</h2>
                 
-                <div class="flex gap-2 mb-6">
+                <div class="flex flex-wrap gap-2 mb-6">
                     <button onclick="showAdminCreator('item-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="item-creator">Criar Itens</button>
                     <button onclick="showAdminCreator('enemy-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="enemy-creator">Criar Inimigos</button>
                     <button onclick="showAdminCreator('mission-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="mission-creator">Criar Missões</button>
                     <button onclick="showAdminCreator('achievement-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="achievement-creator">Criar Conquistas</button>
                     <button onclick="showAdminCreator('player-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="player-manager">Gerenciar Jogadores</button>
+                    <button onclick="showAdminCreator('gang-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gang-manager">Gerenciar Gangues</button>
                 </div>
 
                 <!-- Admin Creator: Itens -->
@@ -492,13 +493,27 @@
                             <div class="flex flex-col"><label>Defesa</label><input id="admin-edit-player-defense" type="number"></div>
                             <div class="flex flex-col"><label>Sorte</label><input id="admin-edit-player-luck" type="number"></div>
                             <div class="flex flex-col"><label>Agilidade</label><input id="admin-edit-player-agility" type="number"></div>
-                            <!-- === INÍCIO DA ALTERAÇÃO === -->
                             <div class="col-span-full mt-4 flex flex-wrap gap-4">
                                 <button onclick="adminSaveChangesToPlayer()" class="btn-game bg-green-700 px-4 py-2 rounded-md">Salvar Alterações</button>
                                 <button onclick="adminResetPlayer()" class="btn-game bg-yellow-700 px-4 py-2 rounded-md" style="border-bottom-color: #b7791f;">Resetar Personagem</button>
                                 <button onclick="adminDeletePlayer()" class="btn-game bg-red-800 px-4 py-2 rounded-md" style="border-bottom-color: #742a2a;">Excluir Personagem</button>
                             </div>
-                            <!-- === FIM DA ALTERAÇÃO === -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Creator: Gang Manager -->
+                <div id="admin-gang-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Gangues</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col mb-4">
+                            <label for="admin-gang-select">Selecionar Gangue</label>
+                            <select id="admin-gang-select">
+                                <option value="">-- Carregando gangues... --</option>
+                            </select>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="adminDeleteGang()" class="btn-game bg-red-800 px-4 py-2 rounded-md" style="border-bottom-color: #742a2a;">Excluir Gangue</button>
                         </div>
                     </div>
                 </div>
@@ -637,7 +652,7 @@
             activeMission: null, missionProgress: {}, statusEffects: {},
             itemInstanceCounter: 0,
             dailyReward: { lastLoginDate: null, loginStreak: 0 },
-            dailyRefreshes: { lastRefreshDate: null, shop: 0, missions: 0, enemies: 0 }, // MODIFICADO
+            dailyRefreshes: { lastRefreshDate: null, shop: 0, missions: 0, enemies: 0 },
             achievements: [],
             offlinePatrol: { active: false, startTime: null },
             bossCooldowns: {},
@@ -725,7 +740,13 @@
         }
 
         if (screenId === 'inventory') renderInventory();
-        if (screenId === 'admin') { populateAdminSelectors(); showAdminCreator('item-creator'); loadAdminEventStatus(); adminRenderPlayerManager(); }
+        if (screenId === 'admin') { 
+            populateAdminSelectors(); 
+            showAdminCreator('item-creator'); 
+            loadAdminEventStatus(); 
+            adminRenderPlayerManager();
+            adminRenderGangManager();
+        }
         if (screenId === 'bosses') renderBosses();
         if (screenId === 'achievements') renderAchievements();
         if (screenId === 'gang') renderGangScreen();
@@ -811,7 +832,6 @@
     
     // --- FUNÇÕES DO SISTEMA DE ATUALIZAR ---
     function checkAndResetDailyRefreshes() {
-        // Migração para saves antigos que usavam um contador único
         if (!player.dailyRefreshes || typeof player.dailyRefreshes.count !== 'undefined') {
             player.dailyRefreshes = { lastRefreshDate: null, shop: 0, missions: 0, enemies: 0 };
         }
@@ -1068,7 +1088,6 @@
         currentShopStock = { weapons: [], armors: [] };
         const playerLevel = player.level;
         
-        // Pega uma amostra aleatória de itens para a loja
         const weaponPool = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
         const armorPool = [...armors].sort(() => 0.5 - Math.random()).slice(0, 4);
 
@@ -1265,7 +1284,6 @@
         
         renderOfflinePatrol();
         
-        // Seleciona 3 missões aleatórias para exibir
         const availableMissions = [...missions];
         const missionCount = Math.min(3, availableMissions.length);
 
@@ -1586,7 +1604,6 @@
         player.xp += Math.round(finalAmount);
         while (player.xp >= player.xpToNextLevel) { levelUp(); }
         updateUI();
-        // Auto-save is triggered by levelUp or other calling functions
     }
 
     function levelUp() {
@@ -1641,8 +1658,8 @@
 
         currentEnemy = JSON.parse(JSON.stringify(enemyObject));
         currentEnemy.baseHp = enemyObject.hp; 
-        currentEnemy.statusEffects = {}; // Reseta efeitos do inimigo
-        player.statusEffects = {}; // Reseta efeitos do jogador
+        currentEnemy.statusEffects = {}; 
+        player.statusEffects = {}; 
         document.getElementById('battle-player-name').innerText = player.name;
         document.getElementById('battle-player-img').src = player.avatar;
         document.getElementById('battle-enemy-name').innerText = currentEnemy.name;
@@ -1659,7 +1676,6 @@
         if (!isBattleInProgress) return;
         const totalStats = getPlayerTotalStats();
 
-        // --- EFEITOS DE REGENERAÇÃO/STATUS DO JOGADOR (INÍCIO DO TURNO) ---
         const armorAbilityRegen = player.armor.ability;
         if (armorAbilityRegen && armorAbilityRegen.type === "regeneration" && player.hp < player.maxHp) {
              const healedAmount = Math.min(armorAbilityRegen.value, player.maxHp - player.hp);
@@ -1668,7 +1684,6 @@
              animateDamage(healedAmount, 'battle-player-img', false, false, true);
         }
         
-        // --- ATAQUE DO JOGADOR ---
         let finalEnemyDefense = currentEnemy.defense || 0;
         const weaponAbility = player.weapon.ability;
         const armorAbility = player.armor.ability;
@@ -1682,7 +1697,6 @@
 
         let playerDamage = Math.max(1, (player.baseAttack + getTotalWeaponDamage(player.weapon)) - finalEnemyDefense);
         
-        // Habilidade Berserk
         if (armorAbility && armorAbility.type === "berserk" && (player.hp / player.maxHp) < armorAbility.threshold) {
              playerDamage *= armorAbility.value;
              logBattle(`<span class="text-red-500">FRENESI: Seu dano aumenta!</span>`);
@@ -1703,7 +1717,6 @@
         logBattle(`Você ${isCrit ? 'CRITICOU' : 'atacou'} e causou ${playerDamage} de dano.`);
         animateDamage(playerDamage, 'battle-enemy-img', isCrit, false);
         
-        // Habilidades pós-ataque
         if (weaponAbility && Math.random() * 100 < weaponAbility.chance) {
             if (weaponAbility.type === "lifesteal") {
                 const healedAmount = Math.round(playerDamage * weaponAbility.value);
@@ -1717,7 +1730,6 @@
             }
         }
         
-        // Habilidade de Executar
         if (weaponAbility && weaponAbility.type === 'execute' && currentEnemy.hp > 0 && (currentEnemy.hp / currentEnemy.baseHp) < weaponAbility.threshold) {
             if (Math.random() * 100 < weaponAbility.chance) {
                 logBattle(`<span class="text-red-700">HABILIDADE: EXECUTADO!</span>`);
@@ -1729,20 +1741,17 @@
         updateBattleUI();
         if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
 
-        // --- TURNO DO INIMIGO ---
         battleTimeoutId = setTimeout(() => {
-            // Efeitos de Status no Inimigo (ex: veneno)
             if (currentEnemy.statusEffects.poison && currentEnemy.statusEffects.poison.turns > 0) {
                 const poisonDamage = currentEnemy.statusEffects.poison.damage;
                 currentEnemy.hp = Math.max(0, currentEnemy.hp - poisonDamage);
                 logBattle(`<span class="text-purple-400">${currentEnemy.name} sofreu ${poisonDamage} de dano de veneno.</span>`);
-                animateDamage(poisonDamage, 'battle-enemy-img', false, false, false, true); // Nova flag para veneno
+                animateDamage(poisonDamage, 'battle-enemy-img', false, false, false, true); 
                 currentEnemy.statusEffects.poison.turns--;
                 updateBattleUI();
                  if (currentEnemy.hp <= 0) { battleTimeoutId = setTimeout(() => endBattle(true), 1000); return; }
             }
             
-            // Ataque do Inimigo
             const dodgeChance = Math.min(75, totalStats.agility * 0.4);
             let isDodge = Math.random() * 100 < dodgeChance;
             let enemyDamage = 0;
@@ -1754,7 +1763,6 @@
                 soundManager.play('hit');
                 animateDamage(enemyDamage, 'battle-player-img', false, false);
 
-                // Habilidade de Espinhos
                 if (armorAbility && armorAbility.type === "thorns") {
                     const reflectedDamage = armorAbility.value;
                     currentEnemy.hp = Math.max(0, currentEnemy.hp - reflectedDamage);
@@ -1775,7 +1783,6 @@
     }
     
     function skipBattle() {
-        // ... (código existente sem alterações)
         if (!isBattleInProgress) return;
         clearTimeout(battleTimeoutId); isBattleInProgress = false;
         const totalStats = getPlayerTotalStats();
@@ -1817,7 +1824,6 @@
             player.hp = player.maxHp;
             player.stats.enemiesKilled++;
             
-            // ... (resto do código de endBattle sem alterações)
             if (bosses.some(b => b.id === currentEnemy.id)) {
                 player.bossCooldowns[currentEnemy.id] = new Date().getTime();
             }
@@ -1960,7 +1966,7 @@
         player.offlinePatrol.startTime = new Date().getTime();
         showToast("Patrulha iniciada!", 'success');
         renderMissions();
-        saveGame(true); // Salva imediatamente para garantir que o estado seja persistido antes de fechar a aba
+        saveGame(true);
     }
 
     function stopOfflinePatrol(isFromLoad = false) {
@@ -2541,7 +2547,7 @@
         if (newName) {
             player.name = newName;
             updateUI();
-            saveGame(true); // Salva o nome inicial
+            saveGame(true);
         }
     }
 
@@ -2652,7 +2658,6 @@
         }
     }
 
-    // === INÍCIO DAS NOVAS FUNÇÕES ===
     function adminResetPlayer() {
         const playerId = document.getElementById('admin-selected-player-id').value;
         const playerName = document.getElementById('admin-edit-player-name').value;
@@ -2666,25 +2671,32 @@
                 callback: async () => {
                     try {
                         const initialData = getInitialPlayerState();
-                        // Manter o nome e a gangue do jogador
                         const playerPublicRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/players`, playerId);
                         const playerPublicSnap = await window.firebase.getDoc(playerPublicRef);
                         
                         if (playerPublicSnap.exists()) {
-                            const currentPublicData = playerPublicSnap.data();
-                            initialData.name = currentPublicData.name;
+                            initialData.name = playerPublicSnap.data().name;
                         }
 
-                        // Resetar os dados privados (save completo)
                         const playerPrivateRef = window.firebase.doc(db, `/artifacts/${appId}/users/${playerId}/player`, 'saveData');
                         await window.firebase.setDoc(playerPrivateRef, initialData);
 
-                        // Resetar os dados públicos (para o ranking)
-                        await updatePlayerLeaderboardData(); // Reutiliza a função para atualizar com os dados resetados
-
+                        const publicDataToSave = {
+                            name: initialData.name,
+                            level: initialData.level,
+                            xp: initialData.xp,
+                            money: initialData.money,
+                            gold: initialData.gold,
+                            skillPoints: initialData.skillPoints,
+                            baseAttack: initialData.baseAttack,
+                            stats: initialData.stats, 
+                            totalMoneyEarned: initialData.stats.totalMoneyEarned,
+                            enemiesKilled: initialData.stats.enemiesKilled 
+                        };
+                        await window.firebase.setDoc(playerPublicRef, publicDataToSave);
+                        
                         showToast(`Jogador ${playerName} resetado com sucesso!`, 'success');
                         
-                        // Se o admin resetou a si mesmo, recarrega os dados locais
                         if(playerId === userId) {
                             player = initialData;
                             updateUI();
@@ -2726,9 +2738,8 @@
                         showToast(`Jogador ${playerName} excluído com sucesso!`, 'success');
                         
                         document.getElementById('admin-player-edit-form').classList.add('hidden');
-                        adminRenderPlayerManager(); // Atualiza a lista de jogadores
+                        adminRenderPlayerManager();
 
-                        // Se o admin se excluiu, recarrega a página para começar do zero
                         if (playerId === userId) {
                             setTimeout(() => window.location.reload(), 1500);
                         }
@@ -2744,8 +2755,61 @@
         
         showModal("Confirmar Exclusão de Personagem", modalBody, buttons);
     }
-    // === FIM DAS NOVAS FUNÇÕES ===
 
+    async function adminRenderGangManager() {
+        const select = document.getElementById('admin-gang-select');
+        if (!db || !select) return;
+
+        select.innerHTML = '<option value="">-- Carregando gangues... --</option>';
+
+        try {
+            const gangsRef = window.firebase.collection(db, `/artifacts/${appId}/public/data/gangs`);
+            const querySnapshot = await window.firebase.getDocs(gangsRef);
+            
+            let optionsHtml = '<option value="">-- Selecione uma gangue --</option>';
+            querySnapshot.forEach(doc => {
+                const gang = doc.data();
+                optionsHtml += `<option value="${doc.id}">[${gang.tag}] ${gang.name} (${doc.id.substring(0, 5)}...)</option>`;
+            });
+            select.innerHTML = optionsHtml;
+        } catch (e) {
+            console.error("Error fetching gangs for admin:", e);
+            select.innerHTML = '<option value="">-- Erro ao carregar --</option>';
+        }
+    }
+
+    function adminDeleteGang() {
+        const gangId = document.getElementById('admin-gang-select').value;
+        const gangSelect = document.getElementById('admin-gang-select');
+        const gangName = gangSelect.options[gangSelect.selectedIndex]?.text;
+        if (!gangId) {
+            showToast("Nenhuma gangue selecionada.", "error");
+            return;
+        }
+
+        const modalBody = `Tem certeza que deseja <strong>EXCLUIR PERMANENTEMENTE</strong> a gangue <strong>${gangName}</strong>? <br><br> <span class="text-red-400 font-bold">Esta ação é irreversível e não pode ser desfeita!</span>`;
+        const buttons = [
+            { 
+                text: 'Excluir Permanentemente', 
+                classes: 'btn-game bg-red-800 px-6 py-2 rounded-md font-bold uppercase', 
+                callback: async () => {
+                    try {
+                        const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, gangId);
+                        await window.firebase.deleteDoc(gangRef);
+                        showToast(`Gangue ${gangName} excluída com sucesso!`, 'success');
+                        adminRenderGangManager(); // Refresh the list
+                    } catch (e) {
+                        console.error("Erro ao excluir gangue:", e);
+                        showToast("Ocorreu um erro ao excluir a gangue.", "error");
+                    }
+                } 
+            },
+            { text: 'Cancelar', classes: 'btn-game bg-gray-600 px-6 py-2 rounded-md font-bold uppercase', callback: null }
+        ];
+        
+        showModal("Confirmar Exclusão de Gangue", modalBody, buttons);
+    }
+    
     function populateAdminSelectors() {
         const typeSelector = document.getElementById('admin-item-type');
         typeSelector.innerHTML = `
@@ -3125,6 +3189,8 @@
             const playerStateToSave = JSON.parse(JSON.stringify(player));
             
             await window.firebase.setDoc(playerDocRef, playerStateToSave);
+            await updatePlayerLeaderboardData();
+
             if (showNotification) {
                 showToast("Progresso salvo com sucesso!", "success");
             }
@@ -3143,7 +3209,7 @@
         if (autoSaveTimeout) {
             clearTimeout(autoSaveTimeout);
         }
-        autoSaveTimeout = setTimeout(() => saveGame(false), 3000); // Salva 3 segundos após a última ação
+        autoSaveTimeout = setTimeout(() => saveGame(false), 3000);
     }
     
     async function loadGame() {
@@ -3160,10 +3226,8 @@
             if(docSnap.exists()){
                 const loadedData = docSnap.data();
 
-                // Faz um merge seguro, especialmente para o inventário, para garantir que saves antigos sejam compatíveis.
                 player = { ...initialState, ...loadedData };
                 player.inventory = { ...initialState.inventory, ...(loadedData.inventory || {}) };
-                // Garante que as listas de armas e armaduras sempre existam.
                 player.inventory.weapons = player.inventory.weapons || [];
                 player.inventory.armors = player.inventory.armors || [];
                 
@@ -3308,8 +3372,6 @@
     // --- INICIALIZAÇÃO ---
     async function initFirebase() {
         try {
-            // !!! IMPORTANTE: COLE A CONFIGURAÇÃO DO SEU FIREBASE AQUI !!!
-            // Você encontra isso nas "Configurações do projeto" no console do Firebase.
             const firebaseConfig = {
                 apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
                 authDomain: "new-gangstar-online.firebaseapp.com",
@@ -3319,9 +3381,8 @@
                 appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
             };
 
-            // O código abaixo verifica se você colou a configuração.
-            if (!firebaseConfig || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
-                 console.error("Firebase config não encontrada. Cole sua configuração do Firebase na função initFirebase.");
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
+                 console.error("Firebase config não encontrada.");
                  showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
                  document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração: As chaves do Firebase não foram inseridas no código.</p>';
                  return null;
@@ -3331,25 +3392,20 @@
             db = window.firebase.getFirestore(app);
             auth = window.firebase.getAuth(app);
 
-            // Se já houver um usuário, retorna o ID dele
-            if (auth.currentUser) {
-                console.log("Usuário já autenticado:", auth.currentUser.uid);
-                return auth.currentUser.uid;
-            }
-
-            // Se não, faz o login (anônimo ou com token) e espera a confirmação
             return new Promise((resolve) => {
                 const unsubscribe = window.firebase.onAuthStateChanged(auth, (user) => {
                     if (user) {
                         console.log("Usuário autenticado com sucesso:", user.uid);
-                        unsubscribe(); // Para de ouvir depois de confirmar o login
+                        unsubscribe(); 
                         resolve(user.uid);
                     }
                 });
 
                 (async () => {
                     try {
-                        // Neste ambiente, __initial_auth_token não existe, então sempre usará anônimo.
+                        if (auth.currentUser) {
+                           return; 
+                        }
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
                         } else {
@@ -3399,7 +3455,6 @@
         userId = await initFirebase();
         
         if (!userId) {
-            showToast("Falha na autenticação. As funções online não funcionarão.", "error");
             return; 
         }
         
@@ -3415,6 +3470,7 @@
         checkOfflinePatrolRewards(); 
         
         checkDailyReward();
+        checkAndResetDailyRefreshes();
         
         if (player.name === "Novo Gangster") {
             promptForPlayerName();
@@ -3429,6 +3485,4 @@
 
 </body>
 </html>
-
-
 
