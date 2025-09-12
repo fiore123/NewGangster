@@ -1021,8 +1021,8 @@ const PATROL_MONEY_PER_MINUTE = 10;
         currentShopStock = { weapons: [], armors: [] };
         const playerLevel = player.level;
         
-        const weaponPool = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
-        const armorPool = [...armors].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const weaponPool = [..weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const armorPool = [..armors].sort(() => 0.5 - Math.random()).slice(0, 4);
 
         weaponPool.forEach(template => {
             const item = getScaledItem(template, playerLevel);
@@ -1034,7 +1034,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 finalItem.goldPrice = Math.ceil(finalItem.price / 150);
             }
 
-            currentShopStock.weapons.push(finalItem);
+            currentShopStockweapons.push(finalItem);
         });
 
         armorPool.forEach(template => {
@@ -1046,14 +1046,14 @@ const PATROL_MONEY_PER_MINUTE = 10;
             if (rarity === 'LENDARIO' || rarity === 'BLACKOUT') {
                 finalItem.goldPrice = Math.ceil(finalItem.price / 150);
             }
-             currentShopStock.armors.push(finalItem);
+             currentShopStockarmors.push(finalItem);
         });
     }
 
     function renderShop() {
-        document.getElementById('shop-weapons').innerHTML = currentShopStock.weapons
+        document.getElementById('shop-weapons').innerHTML = currentShopStockweapons
             .map(item => createItemCard(item, 'weapon')).join('');
-        document.getElementById('shop-armors').innerHTML = currentShopStock.armors
+        document.getElementById('shop-armors').innerHTML = currentShopStockarmors
             .map(item => createItemCard(item, 'armor')).join('');
         document.getElementById('shop-potions').innerHTML = potions.map(item => createItemCard(item, 'potion')).join('');
     }
@@ -1104,10 +1104,10 @@ const PATROL_MONEY_PER_MINUTE = 10;
     function renderInventory() {
         document.getElementById('refinement-stones').innerText = player.inventory.consumables.refinementStones.toLocaleString();
         document.getElementById('equipped-weapon-card').innerHTML = createEquippedCard(player.weapon, 'weapon');
-        document.getElementById('inventory-weapons-list').innerHTML = player.inventory.weapons.map(w => createInventoryCard(w, 'weapon')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
+        document.getElementById('inventory-weapons-list').innerHTML = player.inventoryweapons.map(w => createInventoryCard(w, 'weapon')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
 
         document.getElementById('equipped-armor-card').innerHTML = createEquippedCard(player.armor, 'armor');
-        document.getElementById('inventory-armors-list').innerHTML = player.inventory.armors.map(a => createInventoryCard(a, 'armor')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
+        document.getElementById('inventory-armors-list').innerHTML = player.inventoryarmors.map(a => createInventoryCard(a, 'armor')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
     }
 
     function createEquippedCard(item, type) {
@@ -1567,7 +1567,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
             return;
         }
 
-        const sourceList = type === 'weapon' ? currentShopStock.weapons : currentShopStock.armors;
+        const sourceList = type === 'weapon' ? currentShopStockweapons : currentShopStockarmors;
         const item = sourceList.find(i => i.shopId === itemId);
 
         if (!item) {
@@ -1920,7 +1920,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                              player.inventory.consumables.refinementStones += drop.amount;
                              modalContent += `<br>Você encontrou <span class="text-cyan-400">${drop.amount} Pedra(s) de Refinamento</span>!`;
                         } else if (drop.type === 'equipment') {
-                            const itemPool = [...weapons, ...armors];
+                            const itemPool = [..weapons, ..armors];
                             const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
                             
                             const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
@@ -2082,7 +2082,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 stonesEarned++;
             }
             if (Math.random() * 100 < PATROL_EQUIPMENT_PER_HOUR_CHANCE) {
-                const itemPool = [...weapons, ...armors];
+                const itemPool = [..weapons, ..armors];
                 const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
                 const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
                 let newItem = getScaledItem(droppedItemTemplate, itemLevel);
@@ -3005,11 +3005,11 @@ const PATROL_MONEY_PER_MINUTE = 10;
         }
 
         if (type === 'weapon') {
-            newItem.id = (weapons.length ? Math.max(0, ...weapons.map(w => w.id)) : 0) + 1;
+            newItem.id = (weapons.length ? Math.max(0, ..weapons.map(w => w.id)) : 0) + 1;
             newItem.baseDamage = parseInt(document.getElementById('admin-create-baseDamage').value) || 0;
             weapons.push(newItem);
         } else { // armor
-            newItem.id = (armors.length ? Math.max(0, ...armors.map(a => a.id)) : 0) + 1;
+            newItem.id = (armors.length ? Math.max(0, ..armors.map(a => a.id)) : 0) + 1;
             newItem.stats = {
                 defense: parseInt(document.getElementById('admin-create-stat-defense').value) || 0,
                 hp: parseInt(document.getElementById('admin-create-stat-hp').value) || 0,
@@ -3362,7 +3362,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function updatePlayerItems() {
-        const allPlayerItems = [player.weapon, player.armor, ...player.inventory.weapons, ...player.inventory.armors];
+        const allPlayerItems = [player.weapon, player.armor, ..player.inventoryweapons, ..player.inventoryarmors];
 
         for (const item of allPlayerItems) {
             if (!item || item.id === 0) continue;
@@ -3442,10 +3442,10 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 const loadedData = docSnap.data();
 
                 player = { ...initialState, ...loadedData };
-                player.inventory = { ...initialState.inventory, ...(loadedData.inventory || {}) };
-                player.inventory.weapons = player.inventory.weapons || [];
-                player.inventory.armors = player.inventory.armors || [];
-                player.claimedEventRewards = { ...initialState.claimedEventRewards, ...(loadedData.claimedEventRewards || {}) };
+                player.inventory = { ...initialState.inventory, .....(loadedData.inventory || {}) };
+                player.inventoryweapons = player.inventoryweapons || [];
+                player.inventoryarmors = player.inventoryarmors || [];
+                player.claimedEventRewards = { ...initialState.claimedEventRewards, .....(loadedData.claimedEventRewards || {}) };
                 
                 showToast("Progresso carregado.", "success");
             } else {
@@ -3499,8 +3499,8 @@ const PATROL_MONEY_PER_MINUTE = 10;
 
             if (itemsSnap.exists()) {
                 const data = itemsSnap.data();
-                weapons = data.weapons || [];
-                armors = data.armors || [];
+                weapons = dataweapons || [];
+                armors = dataarmors || [];
                 potions = data.potions || [];
                 document.getElementById('admin-items').value = JSON.stringify(data, null, 2);
             } else {
