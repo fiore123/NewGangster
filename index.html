@@ -491,8 +491,7 @@ function showScreenAndCloseModal(screenId) {
 
 function showScreen(screenId, isResize = false) {
     if (isBattleInProgress && screenId !== 'battle') return;
-    
-    // Atualiza a tela ativa apenas se não for um redimensionamento
+
     if (!isResize) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         const screenElement = document.getElementById(`screen-${screenId}`);
@@ -505,7 +504,6 @@ function showScreen(screenId, isResize = false) {
     const desktopNav = document.getElementById('main-nav-desktop');
     const mobileNav = document.getElementById('main-nav-mobile');
     
-    // Esconde/mostra elementos com base na tela de batalha
     if (screenId === 'battle') {
         if (header) header.style.display = 'none';
         if (desktopNav) desktopNav.style.display = 'none';
@@ -516,7 +514,7 @@ function showScreen(screenId, isResize = false) {
         if (isMobile) {
             if (desktopNav) desktopNav.style.display = 'none';
             if (mobileNav) mobileNav.style.display = 'flex';
-            if (gameContent) gameContent.style.paddingBottom = '70px'; // Espaço para a nav mobile
+            if (gameContent) gameContent.style.paddingBottom = '70px';
         } else {
             if (desktopNav) desktopNav.style.display = 'grid';
             if (mobileNav) mobileNav.style.display = 'none';
@@ -524,7 +522,6 @@ function showScreen(screenId, isResize = false) {
         }
     }
     
-    // Atualiza o estado ativo dos botões de navegação
     document.querySelectorAll('#main-nav-desktop .btn-game, #main-nav-mobile .btn-game').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.screen === screenId) {
@@ -532,16 +529,10 @@ function showScreen(screenId, isResize = false) {
         }
     });
     
-    // Limpa intervalos que rodam apenas em telas específicas
     if (patrolIntervalId) { clearInterval(patrolIntervalId); patrolIntervalId = null; }
     if (eventTimerIntervalId) { clearInterval(eventTimerIntervalId); eventTimerIntervalId = null; }
 
-    // Carrega o conteúdo da tela (se não for apenas um redimensionamento)
     if (!isResize) {
-        // Carrega o HTML interno das telas que foi omitido acima
-        const screenContainer = document.getElementById(`screen-${screenId}`);
-
-        // Funções de renderização específicas para cada tela
         if (screenId === 'inventory') renderInventory();
         if (screenId === 'admin') { 
             populateAdminSelectors(); 
@@ -3654,23 +3645,12 @@ const PATROL_MONEY_PER_MINUTE = 10;
         }
     }
 
-
-
-// --- CÓDIGO JAVASCRIPT COMPLETO ---
-// (Por questão de tamanho, o restante do seu código JS idêntico não será repetido aqui, mas
-// você deve colar o SCRIPT INTEIRO do seu arquivo PC aqui, substituindo a função `showScreen`
-// pela versão unificada acima e adicionando o seguinte no final)
-
-// --- NO FINAL DO SEU ARQUIVO JAVASCRIPT ---
-
-// Adiciona o listener para redimensionamento da janela
 window.onresize = applyLayout;
 
 window.onload = async function() {
     applyLayout(); // <<-- ADICIONAR ESTA LINHA NO INÍCIO DO ONLOAD
     soundManager.init();
     
-    // ... (resto do seu código onload original) ...
 
     // O resto do seu onload permanece o mesmo:
     userId = await initFirebase();
@@ -3692,9 +3672,6 @@ window.onload = async function() {
     setDistributionAmount(1);
     showScreen('main');
 };
-
-
-// Função auxiliar para obter o HTML das telas (para não poluir a tag <main>)
 
 </script>
 
