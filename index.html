@@ -113,8 +113,8 @@
         /* Telas e Abas */
         .screen { display: none; }
         .screen.active { display: block; }
-        .shop-category { display: none; }
-        .shop-category.active { display: grid; }
+        .shop-category, .event-category { display: none; }
+        .shop-category.active, .event-category.active { display: block; }
         .admin-creator { display: none; }
         .admin-creator.active { display: block; }
         
@@ -131,7 +131,7 @@
         /* Correção da Imagem do Item */
         .item-image { width: 100%; height: 128px; object-fit: contain; }
         
-        textarea, select, input[type=text], input[type=number], input[type=checkbox] { background-color: #2d3748; border: 1px solid #4a5568; color: #eee; border-radius: 4px; padding: 8px; }
+        textarea, select, input[type=text], input[type=number], input[type=checkbox], input[type=datetime-local] { background-color: #2d3748; border: 1px solid #4a5568; color: #eee; border-radius: 4px; padding: 8px; }
         input[type=checkbox] { padding: 0; width: 1rem; height: 1rem; }
         
         /* Estilos de Raridade */
@@ -185,9 +185,10 @@
         </header>
 
         <!-- NAVEGAÇÃO -->
-        <nav id="main-nav" class="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-2 mb-6">
+        <nav id="main-nav" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-11 gap-2 mb-6">
             <button onclick="showScreen('main')" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
             <button onclick="showScreen('missions')" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
+            <button onclick="showScreen('events')" class="btn-game bg-orange-700 p-3 rounded-md font-bold text-lg uppercase" style="border-color: #c05621;"><i class="fas fa-calendar-alt"></i> Eventos</button>
             <button onclick="showScreen('achievements')" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
             <button onclick="showScreen('inventory')" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
             <button onclick="showScreen('enemies')" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
@@ -264,6 +265,18 @@
                  <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
             
+            <!-- TELA DE EVENTOS -->
+            <div id="screen-events" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Eventos Ativos</h2>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="showEventCategory('new-server')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="new-server"><i class="fas fa-server"></i> Novo Servidor</button>
+                    <!-- Outras abas de evento podem ser adicionadas aqui -->
+                </div>
+                <div id="event-new-server" class="event-category active">
+                    <!-- Conteúdo do Evento renderizado via JS -->
+                </div>
+            </div>
+
              <!-- TELA DE GANGUE -->
             <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
                  <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Território da Gangue</h2>
@@ -354,8 +367,9 @@
                     <button onclick="showAdminCreator('enemy-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="enemy-creator">Criar Inimigos</button>
                     <button onclick="showAdminCreator('mission-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="mission-creator">Criar Missões</button>
                     <button onclick="showAdminCreator('achievement-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="achievement-creator">Criar Conquistas</button>
-                    <button onclick="showAdminCreator('player-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="player-manager">Gerenciar Jogadores</button>
-                    <button onclick="showAdminCreator('gang-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gang-manager">Gerenciar Gangues</button>
+                    <button onclick="showAdminCreator('player-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="player-manager">Jogadores</button>
+                    <button onclick="showAdminCreator('gang-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gang-manager">Gangues</button>
+                    <button onclick="showAdminCreator('event-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="event-manager">Eventos</button>
                 </div>
 
                 <!-- Admin Creator: Itens -->
@@ -518,16 +532,51 @@
                     </div>
                 </div>
 
+                <!-- Admin Creator: Event Manager -->
+                <div id="admin-event-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Eventos Globais</h3>
+                    
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="text-xl font-bold text-cyan-400 mb-2">Evento de Novo Servidor</h4>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div class="flex items-center gap-2">
+                                <label for="admin-event-newServer-active" class="text-lg">Ativar Evento</label>
+                                <input id="admin-event-newServer-active" type="checkbox" class="w-6 h-6">
+                            </div>
+                            <div class="flex flex-col">
+                                <label for="admin-event-newServer-endTime">Data de Término</label>
+                                <input id="admin-event-newServer-endTime" type="datetime-local">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <h4 class="text-xl font-bold text-cyan-400 mb-2">Evento de XP em Dobro</h4>
+                        <div class="flex items-center gap-2">
+                            <label for="admin-event-doubleXp" class="text-lg">Ativar Evento</label>
+                            <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button onclick="adminUpdateEvents()" class="btn-game bg-orange-700 px-4 py-2 rounded-md">Atualizar Eventos</button>
+                    </div>
+                </div>
+
                 <div class="mb-8 mt-8">
                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Editor de Dados (JSON)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <h4 class="text-xl font-bold mb-2">Itens (Armas, Armaduras, Poções)</h4>
+                            <h4 class="text-xl font-bold mb-2">Itens</h4>
                             <textarea id="admin-items" rows="10" class="w-full p-2 rounded"></textarea>
                         </div>
                         <div>
-                            <h4 class="text-xl font-bold mb-2">Jogabilidade (Inimigos, Missões, etc.)</h4>
+                            <h4 class="text-xl font-bold mb-2">Jogabilidade</h4>
                             <textarea id="admin-gameplay" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Eventos</h4>
+                            <textarea id="admin-events" rows="10" class="w-full p-2 rounded"></textarea>
                         </div>
                     </div>
                     <div class="mt-4">
@@ -578,16 +627,6 @@
                         <button onclick="adminResetBossCooldowns()" class="btn-game bg-red-800 px-4 py-2 rounded-md self-end">Resetar Cooldowns dos Chefes</button>
                     </div>
                 </div>
-                 <div class="mt-8">
-                      <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controle de Eventos Globais</h3>
-                      <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
-                          <div class="flex items-center gap-2">
-                              <label for="admin-event-doubleXp" class="text-lg">Ativar Evento de XP em Dobro?</label>
-                              <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
-                          </div>
-                          <button onclick="adminUpdateEvents()" class="btn-game bg-orange-700 px-4 py-2 rounded-md self-end">Atualizar Eventos</button>
-                      </div>
-                 </div>
             </div>
 
         </main>
@@ -656,7 +695,8 @@
             achievements: [],
             offlinePatrol: { active: false, startTime: null },
             bossCooldowns: {},
-            gangId: null
+            gangId: null,
+            claimedEventRewards: { newServer: [] }
         };
     }
 
@@ -668,6 +708,7 @@
     let bosses = [];
     let missions = [];
     let achievements = [];
+    let eventsConfig = {};
     
     const dailyRewards = [
         { money: 200, xp: 50 }, { money: 400, xp: 100 }, { money: 600, xp: 150, stones: 1 },
@@ -747,6 +788,7 @@
             adminRenderPlayerManager();
             adminRenderGangManager();
         }
+        if (screenId === 'events') renderEventsScreen();
         if (screenId === 'bosses') renderBosses();
         if (screenId === 'achievements') renderAchievements();
         if (screenId === 'gang') renderGangScreen();
@@ -772,7 +814,7 @@
         document.getElementById('modal-body').innerHTML = content;
         
         const buttonsContainer = document.getElementById('modal-buttons');
-        buttonsContainer.innerHTML = ''; // Limpa botões antigos
+        buttonsContainer.innerHTML = '';
 
         if (buttons) {
             buttons.forEach(btn => {
@@ -816,6 +858,14 @@
         document.querySelectorAll('#screen-shop .tab-btn').forEach(el => el.classList.remove('active'));
         document.querySelector(`#screen-shop .tab-btn[data-category="${category}"]`).classList.add('active');
     }
+    
+    function showEventCategory(category) {
+        document.querySelectorAll('.event-category').forEach(el => el.classList.remove('active'));
+        document.getElementById(`event-${category}`).classList.add('active');
+        document.querySelectorAll('#screen-events .tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelector(`#screen-events .tab-btn[data-category="${category}"]`).classList.add('active');
+    }
+
 
    function showAdminCreator(category) {
         document.querySelectorAll('.admin-creator').forEach(el => el.classList.remove('active'));
@@ -1095,7 +1145,7 @@
             const item = getScaledItem(template, playerLevel);
             const rarity = getRandomRarity();
             const finalItem = applyRarityToItem(item, rarity);
-            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`; // Unique ID
+            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`;
 
             if (rarity === 'LENDARIO' || rarity === 'BLACKOUT') {
                 finalItem.goldPrice = Math.ceil(finalItem.price / 150);
@@ -1108,7 +1158,7 @@
             const item = getScaledItem(template, playerLevel);
             const rarity = getRandomRarity();
             const finalItem = applyRarityToItem(item, rarity);
-            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`; // Unique ID
+            finalItem.shopId = `${item.id}_${new Date().getTime()}_${Math.random()}`;
 
             if (rarity === 'LENDARIO' || rarity === 'BLACKOUT') {
                 finalItem.goldPrice = Math.ceil(finalItem.price / 150);
@@ -1515,7 +1565,7 @@
             const newItem = JSON.parse(JSON.stringify(item));
             newItem.refineLevel = 0;
             newItem.instanceId = player.itemInstanceCounter++;
-            delete newItem.shopId; // Remove shop-specific ID
+            delete newItem.shopId;
 
             const inventoryListName = type + 's';
             player.inventory[inventoryListName].push(newItem);
@@ -2636,12 +2686,22 @@
             await window.firebase.updateDoc(playerRef, updatedData);
 
             if (playerId === userId) {
-                player.money = updatedData.money;
-                player.gold = updatedData.gold;
-                player.xp = updatedData.xp;
-                player.level = updatedData.level;
-                player.skillPoints = updatedData.skillPoints;
-                player.baseAttack = updatedData.baseAttack;
+                // Se o admin está editando a si mesmo, precisa atualizar o save privado também
+                const playerPrivateRef = window.firebase.doc(db, `/artifacts/${appId}/users/${userId}/player`, 'saveData');
+                 await window.firebase.updateDoc(playerPrivateRef, {
+                    money: updatedData.money,
+                    gold: updatedData.gold,
+                    xp: updatedData.xp,
+                    level: updatedData.level,
+                    skillPoints: updatedData.skillPoints,
+                    baseAttack: updatedData.baseAttack,
+                    'stats.defense': updatedData['stats.defense'],
+                    'stats.luck': updatedData['stats.luck'],
+                    'stats.agility': updatedData['stats.agility']
+                 });
+
+                // Atualiza o estado local do jogador
+                Object.assign(player, updatedData);
                 player.stats.defense = updatedData['stats.defense'];
                 player.stats.luck = updatedData['stats.luck'];
                 player.stats.agility = updatedData['stats.agility'];
@@ -2682,15 +2742,9 @@
                         await window.firebase.setDoc(playerPrivateRef, initialData);
 
                         const publicDataToSave = {
-                            name: initialData.name,
-                            level: initialData.level,
-                            xp: initialData.xp,
-                            money: initialData.money,
-                            gold: initialData.gold,
-                            skillPoints: initialData.skillPoints,
-                            baseAttack: initialData.baseAttack,
-                            stats: initialData.stats, 
-                            totalMoneyEarned: initialData.stats.totalMoneyEarned,
+                            name: initialData.name, level: initialData.level, xp: initialData.xp, money: initialData.money,
+                            gold: initialData.gold, skillPoints: initialData.skillPoints, baseAttack: initialData.baseAttack,
+                            stats: initialData.stats, totalMoneyEarned: initialData.stats.totalMoneyEarned,
                             enemiesKilled: initialData.stats.enemiesKilled 
                         };
                         await window.firebase.setDoc(playerPublicRef, publicDataToSave);
@@ -2794,6 +2848,7 @@
                 classes: 'btn-game bg-red-800 px-6 py-2 rounded-md font-bold uppercase', 
                 callback: async () => {
                     try {
+                        // TODO: Iterar sobre os membros e setar player.gangId para null
                         const gangRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gangs`, gangId);
                         await window.firebase.deleteDoc(gangRef);
                         showToast(`Gangue ${gangName} excluída com sucesso!`, 'success');
@@ -3111,9 +3166,28 @@
             const docSnap = await window.firebase.getDoc(eventsRef);
             if (docSnap.exists()) {
                 const events = docSnap.data();
-                const checkbox = document.getElementById('admin-event-doubleXp');
-                if(checkbox) {
-                    checkbox.checked = events.doubleXp && events.doubleXp.active;
+                
+                const doubleXpCheckbox = document.getElementById('admin-event-doubleXp');
+                if(doubleXpCheckbox) {
+                    doubleXpCheckbox.checked = events.doubleXp && events.doubleXp.active;
+                }
+
+                const newServerCheckbox = document.getElementById('admin-event-newServer-active');
+                const newServerTimeInput = document.getElementById('admin-event-newServer-endTime');
+                if(newServerCheckbox && newServerTimeInput && events.newServer) {
+                    newServerCheckbox.checked = events.newServer.active;
+                    if (events.newServer.endTime) {
+                        const date = new Date(events.newServer.endTime);
+                        // Formato YYYY-MM-DDTHH:MM
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        newServerTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    } else {
+                        newServerTimeInput.value = '';
+                    }
                 }
             }
         } catch (e) {
@@ -3127,14 +3201,22 @@
             return;
         }
         try {
-            const doubleXpCheckbox = document.getElementById('admin-event-doubleXp');
+            const doubleXpActive = document.getElementById('admin-event-doubleXp').checked;
+            const newServerActive = document.getElementById('admin-event-newServer-active').checked;
+            const newServerEndTimeValue = document.getElementById('admin-event-newServer-endTime').value;
+            const newServerEndTime = newServerEndTimeValue ? new Date(newServerEndTimeValue).getTime() : 0;
+
             const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/events/activeEvents`);
             
             await window.firebase.setDoc(eventsRef, {
                 doubleXp: {
-                    active: doubleXpCheckbox.checked,
+                    active: doubleXpActive,
                     multiplier: 2,
                     description: "XP em Dobro!"
+                },
+                newServer: {
+                    active: newServerActive,
+                    endTime: newServerEndTime
                 }
             }, { merge: true });
 
@@ -3230,6 +3312,7 @@
                 player.inventory = { ...initialState.inventory, ...(loadedData.inventory || {}) };
                 player.inventory.weapons = player.inventory.weapons || [];
                 player.inventory.armors = player.inventory.armors || [];
+                player.claimedEventRewards = { ...initialState.claimedEventRewards, ...(loadedData.claimedEventRewards || {}) };
                 
                 showToast("Progresso carregado.", "success");
             } else {
@@ -3248,12 +3331,16 @@
         try {
             const itemsData = JSON.parse(document.getElementById('admin-items').value);
             const gameplayData = JSON.parse(document.getElementById('admin-gameplay').value);
+            const eventsData = JSON.parse(document.getElementById('admin-events').value);
             
             const adminItemsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'items');
             await window.firebase.setDoc(adminItemsRef, itemsData);
             
             const adminGameplayRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'gameplay');
             await window.firebase.setDoc(adminGameplayRef, gameplayData);
+            
+            const adminEventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'events');
+            await window.firebase.setDoc(adminEventsRef, eventsData);
             
             showToast("Dados de admin salvos no Firestore!", "success");
             await loadAdminData(true);
@@ -3269,9 +3356,13 @@
         try {
             const itemsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'items');
             const gameplayRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'gameplay');
+            const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/gameConfig`, 'events');
             
-            const itemsSnap = await window.firebase.getDoc(itemsRef);
-            const gameplaySnap = await window.firebase.getDoc(gameplayRef);
+            const [itemsSnap, gameplaySnap, eventsSnap] = await Promise.all([
+                window.firebase.getDoc(itemsRef),
+                window.firebase.getDoc(gameplayRef),
+                window.firebase.getDoc(eventsRef)
+            ]);
 
             if (itemsSnap.exists()) {
                 const data = itemsSnap.data();
@@ -3281,39 +3372,13 @@
                 document.getElementById('admin-items').value = JSON.stringify(data, null, 2);
             } else {
                  const defaultItems = {
-                    weapons: [
-                        { id: 1, name: "Canivete", baseDamage: 8, price: 150, image: "https://placehold.co/200x200/444444/eeeeee?text=Canivete" },
-                        { id: 2, name: "Navalha Sanguinária", baseDamage: 12, price: 800, image: "https://placehold.co/200x200/8c0000/ffffff?text=Navalha", ability: { type: "lifesteal", chance: 30, value: 0.5, description: "30% de chance de roubar 50% do dano como vida." } },
-                        { id: 3, name: "Soco Inglês", baseDamage: 10, price: 300, image: "https://placehold.co/200x200/cccccc/333333?text=Soco+Inglês"},
-                        { id: 4, name: "Taco com Pregos", baseDamage: 15, price: 1200, image: "https://placehold.co/200x200/8b4513/ffffff?text=Taco", ability: { type: "stun", chance: 15, duration: 1, description: "15% de chance de atordoar o inimigo por 1 turno." }},
-                        { id: 5, name: "Pistola .38", baseDamage: 25, price: 2500, image: "https://placehold.co/200x200/555555/eeeeee?text=.38"},
-                        { id: 6, name: "Faca de Combate", baseDamage: 22, price: 2200, image: "https://placehold.co/200x200/4a5568/ffffff?text=Faca", ability: { type: "poison", chance: 25, value: 10, duration: 3, description: "25% de chance de envenenar, causando 10 de dano por 3 turnos." } },
-                        { id: 7, name: "Escopeta Serrada", baseDamage: 40, price: 5000, image: "https://placehold.co/200x200/3d2c25/ffffff?text=Escopeta" },
-                        { id: 8, name: "Submetralhadora", baseDamage: 35, price: 6500, image: "https://placehold.co/200x200/2d3748/ffffff?text=SMG", ability: {type: "armorBreak", chance: 40, value: 0.5, description: "40% de chance de ignorar 50% da defesa inimiga."}},
-                        { id: 9, name: "Fuzil de Assalto", baseDamage: 55, price: 10000, image: "https://placehold.co/200x200/1a202c/ffffff?text=Fuzil"},
-                        { id: 10, name: "Rifle do Executor", baseDamage: 50, price: 15000, image: "https://placehold.co/200x200/000000/ff0000?text=Rifle", ability: {type: "execute", threshold: 0.2, chance: 15, description: "15% de chance de executar inimigos com menos de 20% de vida."}}
-                    ],
-                    armors: [
-                         { id: 1, name: "Jaqueta de Couro", price: 250, image: "https://placehold.co/200x200/5a2727/ffffff?text=Jaqueta", stats: { defense: 3, hp: 20, luck: 0, agility: 0 } },
-                         { id: 2, name: "Colete à Prova de Balas", price: 1000, image: "https://placehold.co/200x200/333333/ffffff?text=Colete", stats: { defense: 10, hp: 50, luck: 0, agility: -2 } },
-                         { id: 3, name: "Moletom com Capuz", price: 400, image: "https://placehold.co/200x200/4a5568/ffffff?text=Moletom", stats: { defense: 2, hp: 10, luck: 2, agility: 2 }},
-                         { id: 4, name: "Sobretudo Reforçado", price: 1500, image: "https://placehold.co/200x200/2c1e19/ffffff?text=Sobretudo", stats: { defense: 8, hp: 80, luck: 0, agility: -1 }, ability: { type: "thorns", value: 10, description: "Reflete 10 de dano fixo quando atacado." } },
-                         { id: 5, name: "Terno Blindado", price: 5000, image: "https://placehold.co/200x200/1a202c/ffffff?text=Terno", stats: { defense: 15, hp: 100, luck: 5, agility: 0 }},
-                         { id: 6, name: "Uniforme Mercenário", price: 4500, image: "https://placehold.co/200x200/2f4f4f/ffffff?text=Mercenário", stats: { defense: 12, hp: 60, luck: 0, agility: 0 }, ability: { type: "goldDigger", value: 1.2, description: "Ganha 20% a mais de dinheiro em vitórias." }},
-                         { id: 7, name: "Couro do Berserker", price: 3000, image: "https://placehold.co/200x200/8b0000/ffffff?text=Berserker", stats: { defense: 5, hp: 40, luck: 0, agility: 0 }, ability: { type: "berserk", threshold: 0.3, value: 1.5, description: "Abaixo de 30% de vida, seu dano aumenta em 50%." }},
-                         { id: 8, name: "Manto da Regeneração", price: 6000, image: "https://placehold.co/200x200/006400/ffffff?text=Regen", stats: { defense: 10, hp: 120, luck: 0, agility: 0 }, ability: { type: "regeneration", value: 10, description: "Regenera 10 de HP a cada turno." }}
-                    ],
-                    potions: [
-                         { id: 1, name: "Anabolizante", price: 500, image: "https://placehold.co/200x200/ff4444/ffffff?text=Força", effect: { stat: 'baseAttack', value: 1 } },
-                         { id: 2, name: "Cimento", price: 500, image: "https://placehold.co/200x200/a9a9a9/ffffff?text=Defesa", effect: { stat: 'defense', value: 1 } }
-                    ]
+                    weapons: [{ id: 1, name: "Canivete", baseDamage: 8, price: 150, image: "https://placehold.co/200x200/444444/eeeeee?text=Canivete" }, { id: 10, name: "Rifle do Executor", baseDamage: 50, price: 15000, image: "https://placehold.co/200x200/000000/ff0000?text=Rifle", ability: {type: "execute", threshold: 0.2, chance: 15, description: "15% de chance de executar inimigos com menos de 20% de vida."}}],
+                    armors: [{ id: 5, name: "Terno Blindado", price: 5000, image: "https://placehold.co/200x200/1a202c/ffffff?text=Terno", stats: { defense: 15, hp: 100, luck: 5, agility: 0 }}],
+                    potions: []
                 };
                 await window.firebase.setDoc(itemsRef, defaultItems);
-                weapons = defaultItems.weapons;
-                armors = defaultItems.armors;
-                potions = defaultItems.potions;
+                Object.assign(window, defaultItems);
                 document.getElementById('admin-items').value = JSON.stringify(defaultItems, null, 2);
-                console.log("Documento de itens padrão criado.");
             }
 
             if (gameplaySnap.exists()) {
@@ -3324,38 +3389,27 @@
                  achievements = data.achievements || [];
                  document.getElementById('admin-gameplay').value = JSON.stringify(data, null, 2);
             } else {
-                 const defaultGameplay = {
-                    enemies: [
-                        { id: 1, name: "Capanga Novato", hp: 50, attack: 8, xp: 20, money: 50, defense: 2, image: "https://placehold.co/400x400/5a2a27/ffffff?text=Capanga", drops: [{ type: 'refinementStones', chance: 25, amount: 1 }, { type: 'equipment', chance: 5 }] },
-                        { id: 2, name: "Viciado", hp: 40, attack: 12, xp: 25, money: 30, defense: 0, image: "https://placehold.co/400x400/808080/ffffff?text=Viciado", drops: [{ type: 'equipment', chance: 7 }] },
-                        { id: 3, name: "Ladrão de Rua", hp: 60, attack: 10, xp: 30, money: 80, defense: 3, image: "https://placehold.co/400x400/4682b4/ffffff?text=Ladrão", drops: [{ type: 'refinementStones', chance: 30, amount: 1 }] },
-                        { id: 4, name: "Membro de Gangue", hp: 100, attack: 15, xp: 50, money: 120, defense: 5, image: "https://placehold.co/400x400/ff4500/ffffff?text=Membro", drops: [{ type: 'refinementStones', chance: 40, amount: 1 }, { type: 'equipment', chance: 10 }] },
-                        { id: 5, name: "Brutamontes", hp: 200, attack: 12, xp: 80, money: 150, defense: 10, image: "https://placehold.co/400x400/696969/ffffff?text=Brutamontes", drops: [{ type: 'refinementStones', chance: 50, amount: 2 }, { type: 'equipment', chance: 12 }] },
-                        { id: 6, name: "Assassino Furtivo", hp: 80, attack: 25, xp: 100, money: 200, defense: 4, image: "https://placehold.co/400x400/2f4f4f/ffffff?text=Assassino", drops: [{ type: 'equipment', chance: 15 }] },
-                        { id: 7, name: "Tenente da Máfia", hp: 300, attack: 30, xp: 250, money: 500, defense: 15, image: "https://placehold.co/400x400/000080/ffffff?text=Tenente", drops: [{ type: 'refinementStones', chance: 70, amount: 3 }, { type: 'equipment', chance: 20 }] }
-                    ],
-                    bosses: [ 
-                        { id: 101, name: "O Don", hp: 2000, attack: 100, xp: 5000, money: 10000, defense: 50, cooldown: 86400000, image: "https://placehold.co/400x400/000000/ffffff?text=O+DON", drops: [{ type: 'refinementStones', chance: 100, amount: 10 }, { type: 'equipment', chance: 100 }] },
-                        { id: 102, name: "O Químico Louco", hp: 1500, attack: 80, xp: 4000, money: 8000, defense: 30, cooldown: 86400000, image: "https://placehold.co/400x400/32cd32/ffffff?text=Químico", drops: [{ type: 'refinementStones', chance: 100, amount: 8 }, { type: 'equipment', chance: 100 }] }
-                    ],
-                    missions: [ 
-                        { id: 1, title: "Limpeza de Rua", reward: { xp: 100, money: 200 }, goal: { type: "kill", enemyId: 1, count: 3 } },
-                        { id: 2, title: "Recuperar o Roubo", reward: { xp: 120, money: 300 }, goal: { type: "kill", enemyId: 3, count: 5 } },
-                        { id: 3, title: "Controle de Território", reward: { xp: 200, money: 500 }, goal: { type: "kill", enemyId: 4, count: 4 } },
-                        { id: 4, title: "Músculos para Aluguel", reward: { xp: 300, money: 600 }, goal: { type: "kill", enemyId: 5, count: 2 } },
-                        { id: 5, title: "Contrato Silencioso", reward: { xp: 400, money: 800 }, goal: { type: "kill", enemyId: 6, count: 3 } },
-                        { id: 6, title: "Enfraquecer a Máfia", reward: { xp: 800, money: 1500 }, goal: { type: "kill", enemyId: 7, count: 1 } },
-                        { id: 7, title: "Praga da Cidade", reward: { xp: 80, money: 150 }, goal: { type: "kill", enemyId: 2, count: 8 } }
-                    ],
-                    achievements: [ { id: 1, name: "Primeira Vítima", description: "Derrote 1 inimigo.", icon: "fa-fist-raised", goal: { type: 'stat', stat: 'enemiesKilled', value: 1 }, reward: { money: 100, xp: 50 } } ]
-                };
+                 const defaultGameplay = { enemies: [], bosses: [], missions: [], achievements: [] };
                 await window.firebase.setDoc(gameplayRef, defaultGameplay);
-                enemies = defaultGameplay.enemies;
-                bosses = defaultGameplay.bosses;
-                missions = defaultGameplay.missions;
-                achievements = defaultGameplay.achievements;
+                Object.assign(window, defaultGameplay);
                 document.getElementById('admin-gameplay').value = JSON.stringify(defaultGameplay, null, 2);
-                console.log("Documento de gameplay padrão criado.");
+            }
+
+            if(eventsSnap.exists()) {
+                const data = eventsSnap.data();
+                eventsConfig = data;
+                document.getElementById('admin-events').value = JSON.stringify(data, null, 2);
+            } else {
+                const defaultEvents = {
+                    newServerRewards: [
+                        { id: "level10", type: "level", goal: 10, description: "Alcance o Nível 10", reward: { type: "weapon", id: 9, rarity: "LENDARIO" } },
+                        { id: "refine5", type: "highestRefine", goal: 5, description: "Refine um item para +5", reward: { type: "armor", id: 5, rarity: "LENDARIO" } },
+                        { id: "money10k", type: "stat", stat: "totalMoneyEarned", goal: 10000, description: "Acumule $10,000", reward: { type: "weapon", id: 10, rarity: "LENDARIO" } }
+                    ]
+                };
+                await window.firebase.setDoc(eventsRef, defaultEvents);
+                eventsConfig = defaultEvents;
+                document.getElementById('admin-events').value = JSON.stringify(defaultEvents, null, 2);
             }
 
             if(fromSave) {
@@ -3384,7 +3438,7 @@
             if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
                  console.error("Firebase config não encontrada.");
                  showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
-                 document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração: As chaves do Firebase não foram inseridas no código.</p>';
+                 document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração.</p>';
                  return null;
             }
             
@@ -3395,7 +3449,7 @@
             return new Promise((resolve) => {
                 const unsubscribe = window.firebase.onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        console.log("Usuário autenticado com sucesso:", user.uid);
+                        console.log("Usuário autenticado:", user.uid);
                         unsubscribe(); 
                         resolve(user.uid);
                     }
@@ -3421,7 +3475,7 @@
 
         } catch (e) {
             console.error("Erro na inicialização do Firebase:", e);
-            document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro ao conectar aos serviços online.</p>';
+            document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro ao conectar.</p>';
             return null;
         }
     }
@@ -3441,8 +3495,17 @@
 
     function displayActiveEvents() {
         const banner = document.getElementById('event-banner');
+        let activeEventTexts = [];
         if (gameEvents.doubleXp && gameEvents.doubleXp.active) {
-            banner.innerHTML = `🔥 EVENTO ATIVO: ${gameEvents.doubleXp.description} 🔥`;
+            activeEventTexts.push(gameEvents.doubleXp.description);
+        }
+        const now = new Date().getTime();
+        if (gameEvents.newServer && gameEvents.newServer.active && now < gameEvents.newServer.endTime) {
+            activeEventTexts.push("Evento de Novo Servidor");
+        }
+        
+        if (activeEventTexts.length > 0) {
+            banner.innerHTML = `🔥 EVENTO ATIVO: ${activeEventTexts.join(' & ')} 🔥`;
             banner.classList.remove('hidden');
         } else {
             banner.classList.add('hidden');
