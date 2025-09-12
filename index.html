@@ -1021,8 +1021,8 @@ const PATROL_MONEY_PER_MINUTE = 10;
         currentShopStock = { weapons: [], armors: [] };
         const playerLevel = player.level;
         
-        const weaponPool = [.weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
-        const armorPool = [.armors].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const weaponPool = [weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const armorPool = [armors].sort(() => 0.5 - Math.random()).slice(0, 4);
 
         weaponPool.forEach(template => {
             const item = getScaledItem(template, playerLevel);
