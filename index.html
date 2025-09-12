@@ -176,68 +176,91 @@
         <button onclick="showScreen('admin')" data-screen="admin" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
     </nav>
     
-    <main id="game-content">
-        <div id="screen-main" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
-             <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel Principal</h2>
-             <div class="flex flex-col md:flex-row gap-6">
-                 <div class="md:w-1/3 text-center">
-                     <img id="player-avatar" src="" alt="Personagem" class="rounded-lg shadow-lg border-2 border-gray-600 mx-auto mb-4 w-full max-w-xs object-cover aspect-square">
-                     <div class="flex flex-col gap-2">
-                         <p class="text-lg">Escolha seu Avatar:</p>
-                         <div class="flex gap-2 justify-center">
-                             <button onclick="setAvatar('male')" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Masculino</button>
-                             <button onclick="setAvatar('female')" class="btn-game bg-pink-700 w-full p-2 rounded-md font-bold">Feminino</button>
-                         </div>
-                     </div>
-                 </div>
-                 <div class="md:w-2/3">
-                     <h3 class="text-2xl font-bold text-yellow-300">Atributos</h3>
-                     <p class="mb-2">Pontos para distribuir: <span id="skill-points" class="font-bold text-2xl text-green-400">0</span></p>
-                     <div class="flex justify-center gap-2 mb-4">
-                         <button onclick="setDistributionAmount(1)" class="dist-btn active p-2 rounded-md font-bold" data-amount="1">x1</button>
-                         <button onclick="setDistributionAmount(10)" class="dist-btn p-2 rounded-md font-bold" data-amount="10">x10</button>
-                         <button onclick="setDistributionAmount(100)" class="dist-btn p-2 rounded-md font-bold" data-amount="100">x100</button>
-                         <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
-                     </div>
-                     <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
-                          <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                              <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
-                              <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
-                              <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                          </div>
-                          <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                              <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
-                              <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
-                              <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                          </div>
-                          <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                              <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
-                              <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
-                              <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                          </div>
-                          <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                              <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
-                              <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
-                              <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                          </div>
-                     </div>
-                     <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
-                     <p id="mission-status" class="text-lg my-2">Nenhuma missão ativa.</p>
-                 </div>
-             </div>
+<main id="game-content">
+        <div id="screen-main" class="screen active p-4 bg-black bg-opacity-20 rounded-lg">
+            </div>
+        <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                <h2 class="text-3xl font-bold">Quadro de Missões</h2>
+                <div id="missions-refresh-container" class="text-right"></div>
+            </div>
+            <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
+            <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
-        <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-events" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-achievements" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-inventory" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-shop" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-leaderboard" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">...</div>
-        <div id="screen-battle" class="screen p-4 relative overflow-hidden flex flex-col justify-between">...</div>
-        </main>
+        <div id="screen-events" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Eventos Ativos</h2>
+            <div class="flex gap-2 mb-6">
+                <button onclick="showEventCategory('new-server')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="new-server"><i class="fas fa-server"></i> Novo Servidor</button>
+            </div>
+            <div id="event-new-server" class="event-category active"></div>
+        </div>
+        <div id="screen-achievements" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Conquistas</h2>
+            <div id="achievements-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+        <div id="screen-inventory" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Inventário e Refinamento</h2>
+            <div class="text-center mb-6 bg-gray-800 p-3 rounded-md">
+                <p class="text-xl">Pedras de Refinamento: <span id="refinement-stones" class="font-bold text-2xl text-cyan-400">0</span></p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-yellow-300 mb-2">Arma Equipada</h3>
+                    <div id="equipped-weapon-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                    <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armas</h3>
+                    <div id="inventory-weapons-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-yellow-300 mb-2">Armadura Equipada</h3>
+                    <div id="equipped-armor-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                    <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armaduras</h3>
+                    <div id="inventory-armors-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                </div>
+            </div>
+        </div>
+        <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                <h2 class="text-3xl font-bold">Escolha seu Alvo</h2>
+                <div id="enemies-refresh-container" class="text-right"></div>
+            </div>
+            <div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+        <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Covil dos Chefes</h2>
+            <div id="bosses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+        <div id="screen-shop" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                <h2 class="text-3xl font-bold">Mercado Negro</h2>
+                <div id="shop-refresh-container" class="text-right"></div>
+            </div>
+            <div class="flex gap-2 mb-6">
+                <button onclick="showShopCategory('weapons')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase active" data-category="weapons"><i class="fas fa-gun"></i> Armas</button>
+                <button onclick="showShopCategory('armors')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="armors"><i class="fas fa-shield-alt"></i> Armaduras</button>
+                <button onclick="showShopCategory('potions')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="potions"><i class="fas fa-flask"></i> Poções</button>
+            </div>
+            <div id="shop-weapons" class="shop-category active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div id="shop-armors" class="shop-category grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div id="shop-potions" class="shop-category grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+        <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Território da Gangue</h2>
+            <div id="gang-content" class="text-center"></div>
+        </div>
+        <div id="screen-leaderboard" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Líderes</h2>
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="renderLeaderboard('level')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="level"><i class="fas fa-star"></i> Mais Poderosos</button>
+                <button onclick="renderLeaderboard('totalMoneyEarned')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="totalMoneyEarned"><i class="fas fa-dollar-sign"></i> Mais Ricos</button>
+                <button onclick="renderLeaderboard('gangs')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gangs"><i class="fas fa-users"></i> Gangues Mais Ricas</button>
+            </div>
+            <div id="leaderboard-list" class="space-y-2"></div>
+        </div>
+        <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+            </div>
+        <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden">
+             </div>
+    </main>
 
     <nav id="main-nav-mobile" class="hidden">
         <button onclick="showScreen('main')" class="btn-game bg-red-700" data-screen="main"><i class="fas fa-home"></i> <span>Principal</span></button>
