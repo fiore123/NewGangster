@@ -3648,27 +3648,30 @@ const PATROL_MONEY_PER_MINUTE = 10;
 window.onresize = applyLayout;
 
 window.onload = async function() {
-    applyLayout(); // <<-- ADICIONAR ESTA LINHA NO INÍCIO DO ONLOAD
+    applyLayout(); // Garante que o layout seja aplicado primeiro
     soundManager.init();
-    
 
-    // O resto do seu onload permanece o mesmo:
     userId = await initFirebase();
     if (!userId) return;
+
     await loadAdminData();
     await loadGame();
+
     listenForEvents();
+
     regenerateEnergy();
     setInterval(regenerateEnergy, 5000);
     energyIntervalId = setInterval(updateEnergyTimerUI, 1000);
+
     checkOfflinePatrolRewards();
     checkDailyReward();
     checkAndResetDailyRefreshes();
+    
     if (player.name === "Novo Gangster") {
         promptForPlayerName();
     }
+
     updateUI();
-    populateAdminSelectors();
     setDistributionAmount(1);
     showScreen('main');
 };
