@@ -3669,7 +3669,7 @@
                 appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
             };
 
-            if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIza")) {
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
                  console.error("Firebase config não encontrada ou inválida.");
                  showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
                  document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração.</p>';
@@ -3782,3 +3782,4 @@
 
 </body>
 </html>
+
