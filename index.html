@@ -1021,8 +1021,8 @@ const PATROL_MONEY_PER_MINUTE = 10;
         currentShopStock = { weapons: [], armors: [] };
         const playerLevel = player.level;
         
-        const weaponPool = [..weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
-        const armorPool = [..armors].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const weaponPool = [.weapons].sort(() => 0.5 - Math.random()).slice(0, 4);
+        const armorPool = [.armors].sort(() => 0.5 - Math.random()).slice(0, 4);
 
         weaponPool.forEach(template => {
             const item = getScaledItem(template, playerLevel);
@@ -1102,7 +1102,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function renderInventory() {
-        document.getElementById('refinement-stones').innerText = player.inventory.consumables.refinementStones.toLocaleString();
+        document.getElementById('refinement-stones').innerText = playerinventory.consumables.refinementStones.toLocaleString();
         document.getElementById('equipped-weapon-card').innerHTML = createEquippedCard(player.weapon, 'weapon');
         document.getElementById('inventory-weapons-list').innerHTML = player.inventoryweapons.map(w => createInventoryCard(w, 'weapon')).join('') || '<p class="col-span-full text-center text-gray-400">Vazio</p>';
 
@@ -1392,7 +1392,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         rewardsHtml += `<div class="space-y-4">` + eventsConfig.newServerRewards.map(rewardConfig => {
             let currentProgress = 0;
             const goal = rewardConfig.goal;
-            const isClaimed = player.claimedEventRewards.newServer.includes(rewardConfig.id);
+            const isClaimed = playerclaimedEventRewards.newServer.includes(rewardConfig.id);
 
             if (rewardConfig.type === 'level') {
                 currentProgress = player.level;
@@ -1472,7 +1472,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         const rewardConfig = eventsConfig.newServerRewards.find(r => r.id === rewardId);
         if (!rewardConfig) return;
 
-        if (player.claimedEventRewards.newServer.includes(rewardId)) {
+        if (playerclaimedEventRewards.newServer.includes(rewardId)) {
             showToast("Você já coletou esta recompensa.", "error");
             return;
         }
@@ -1502,9 +1502,9 @@ const PATROL_MONEY_PER_MINUTE = 10;
         newItem.instanceId = player.itemInstanceCounter++;
         
         const inventoryListName = rewardItemDetails.type + 's';
-        player.inventory[inventoryListName].push(newItem);
+        playerinventory[inventoryListName].push(newItem);
         
-        player.claimedEventRewards.newServer.push(rewardId);
+        playerclaimedEventRewards.newServer.push(rewardId);
         
         soundManager.play('levelUp');
         showToast(`Recompensa "${rewardConfig.description}" coletada!`, 'success');
@@ -1603,7 +1603,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
             delete newItem.shopId;
 
             const inventoryListName = type + 's';
-            player.inventory[inventoryListName].push(newItem);
+            playerinventory[inventoryListName].push(newItem);
             showToast(`Você comprou ${newItem.name}!`);
             updateUI();
             triggerAutoSave();
@@ -1611,7 +1611,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function equipItem(type, instanceId) {
-        const inventory = player.inventory[type + 's'];
+        const inventory = playerinventory[type + 's'];
         const itemIndex = inventory.findIndex(i => i.instanceId === instanceId);
         if (itemIndex === -1) return;
         const itemToEquip = inventory[itemIndex];
@@ -1641,7 +1641,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         const currentlyEquipped = player[type];
         if (currentlyEquipped.id === 0) return;
 
-        player.inventory[type + 's'].push(currentlyEquipped);
+        playerinventory[type + 's'].push(currentlyEquipped);
         
         const oldMaxHp = getPlayerTotalStats().maxHp + (20 * (player.level-1));
 
@@ -1661,7 +1661,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function sellItem(type, instanceId) {
-        const inventory = player.inventory[type + 's'];
+        const inventory = playerinventory[type + 's'];
         const itemIndex = inventory.findIndex(i => i.instanceId === instanceId);
         if (itemIndex === -1) return;
 
@@ -1709,9 +1709,9 @@ const PATROL_MONEY_PER_MINUTE = 10;
         if (item.refineLevel >= MAX_REFINE_LEVEL) { showModal("Refinamento", "Nível máximo de refinamento atingido!"); return; }
         
         const cost = (item.refineLevel || 0) + 1;
-        if (player.inventory.consumables.refinementStones < cost) { showModal("Refinamento", "Pedras de refinamento insuficientes!"); return; }
+        if (playerinventory.consumables.refinementStones < cost) { showModal("Refinamento", "Pedras de refinamento insuficientes!"); return; }
         
-        player.inventory.consumables.refinementStones -= cost;
+        playerinventory.consumables.refinementStones -= cost;
         
         const successChance = 100 - (item.refineLevel * 7);
         if (Math.random() * 100 < successChance) {
@@ -1917,10 +1917,10 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 originalEnemy.drops.forEach(drop => {
                     if (Math.random() * 100 < drop.chance) {
                         if (drop.type === 'refinementStones') {
-                             player.inventory.consumables.refinementStones += drop.amount;
+                             playerinventory.consumables.refinementStones += drop.amount;
                              modalContent += `<br>Você encontrou <span class="text-cyan-400">${drop.amount} Pedra(s) de Refinamento</span>!`;
                         } else if (drop.type === 'equipment') {
-                            const itemPool = [..weapons, ..armors];
+                            const itemPool = [weapons, armors];
                             const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
                             
                             const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
@@ -1931,7 +1931,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                             newItem.instanceId = player.itemInstanceCounter++;
                             
                             const inventoryListName = newItem.hasOwnProperty('baseDamage') ? 'weapons' : 'armors';
-                            player.inventory[inventoryListName].push(newItem);
+                            playerinventory[inventoryListName].push(newItem);
                             
                             modalContent += `<br>Você encontrou um item: ${getItemNameWithRarity(newItem)}!`;
                         }
@@ -2082,7 +2082,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 stonesEarned++;
             }
             if (Math.random() * 100 < PATROL_EQUIPMENT_PER_HOUR_CHANCE) {
-                const itemPool = [..weapons, ..armors];
+                const itemPool = [weapons, armors];
                 const droppedItemTemplate = itemPool[Math.floor(Math.random() * itemPool.length)];
                 const itemLevel = Math.max(1, player.level + Math.floor(Math.random() * 3) - 1);
                 let newItem = getScaledItem(droppedItemTemplate, itemLevel);
@@ -2091,14 +2091,14 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 newItem.refineLevel = 0;
                 newItem.instanceId = player.itemInstanceCounter++;
                 const inventoryListName = newItem.hasOwnProperty('baseDamage') ? 'weapons' : 'armors';
-                player.inventory[inventoryListName].push(newItem);
+                playerinventory[inventoryListName].push(newItem);
                 itemsFound.push(newItem);
             }
         }
 
         player.money += moneyEarned;
         player.stats.totalMoneyEarned += moneyEarned;
-        player.inventory.consumables.refinementStones += stonesEarned;
+        playerinventory.consumables.refinementStones += stonesEarned;
         player.stats.totalPatrolTime += Math.floor(effectiveMinutes / 60);
         addXP(xpEarned);
 
@@ -2213,7 +2213,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         addXP(reward.xp);
 
         if (reward.stones) {
-            player.inventory.consumables.refinementStones += reward.stones;
+            playerinventory.consumables.refinementStones += reward.stones;
             rewardText += `<br>E <span class="text-cyan-400">${reward.stones} Pedra(s) de Refinamento</span>!`;
         }
          if (reward.gold) {
@@ -2255,7 +2255,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
                 rewardText.push(`${ach.reward.xp.toLocaleString()} XP`);
             }
             if (ach.reward.stones) {
-                player.inventory.consumables.refinementStones += ach.reward.stones;
+                playerinventory.consumables.refinementStones += ach.reward.stones;
                 rewardText.push(`${ach.reward.stones} Pedras`);
             }
             if (ach.reward.skillPoints) {
@@ -3005,11 +3005,11 @@ const PATROL_MONEY_PER_MINUTE = 10;
         }
 
         if (type === 'weapon') {
-            newItem.id = (weapons.length ? Math.max(0, ..weapons.map(w => w.id)) : 0) + 1;
+            newItem.id = (weapons.length ? Math.max(0, .weapons.map(w => w.id)) : 0) + 1;
             newItem.baseDamage = parseInt(document.getElementById('admin-create-baseDamage').value) || 0;
             weapons.push(newItem);
         } else { // armor
-            newItem.id = (armors.length ? Math.max(0, ..armors.map(a => a.id)) : 0) + 1;
+            newItem.id = (armors.length ? Math.max(0, .armors.map(a => a.id)) : 0) + 1;
             newItem.stats = {
                 defense: parseInt(document.getElementById('admin-create-stat-defense').value) || 0,
                 hp: parseInt(document.getElementById('admin-create-stat-hp').value) || 0,
@@ -3135,7 +3135,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         const quantity = parseInt(document.getElementById('admin-item-quantity').value) || 1;
 
         if (type === 'refinementStones') {
-            player.inventory.consumables.refinementStones += quantity;
+            playerinventory.consumables.refinementStones += quantity;
             showToast(`${quantity} Pedra(s) de Refinamento adicionada(s)!`);
             renderInventory();
             return;
@@ -3157,7 +3157,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
             
             newItem.refineLevel = 0;
             newItem.instanceId = player.itemInstanceCounter++;
-            player.inventory[inventoryListName].push(newItem);
+            playerinventory[inventoryListName].push(newItem);
         }
         
         showToast(`${quantity} x ${itemTemplate.name} adicionado(s) ao inventário.`);
@@ -3362,7 +3362,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function updatePlayerItems() {
-        const allPlayerItems = [player.weapon, player.armor, ..player.inventoryweapons, ..player.inventoryarmors];
+        const allPlayerItems = [player.weapon, player.armor, .player.inventoryweapons, .player.inventoryarmors];
 
         for (const item of allPlayerItems) {
             if (!item || item.id === 0) continue;
@@ -3441,11 +3441,11 @@ const PATROL_MONEY_PER_MINUTE = 10;
             if(docSnap.exists()){
                 const loadedData = docSnap.data();
 
-                player = { ...initialState, ...loadedData };
-                player.inventory = { ...initialState.inventory, .....(loadedData.inventory || {}) };
+                player = { ..initialState, ..loadedData };
+                playerinventory = { ..initialStateinventory, .......(loadedDatainventory || {}) };
                 player.inventoryweapons = player.inventoryweapons || [];
                 player.inventoryarmors = player.inventoryarmors || [];
-                player.claimedEventRewards = { ...initialState.claimedEventRewards, .....(loadedData.claimedEventRewards || {}) };
+                playerclaimedEventRewards = { ..initialStateclaimedEventRewards, .......(loadedDataclaimedEventRewards || {}) };
                 
                 showToast("Progresso carregado.", "success");
             } else {
