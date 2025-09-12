@@ -722,6 +722,7 @@
     let distributionAmount = 1;
     let patrolIntervalId = null;
     let energyIntervalId = null;
+    let eventTimerIntervalId = null;
     let gameEvents = {}; 
     let currentShopStock = null;
 
@@ -775,9 +776,14 @@
         const mainNav = document.getElementById('main-nav');
         if(mainNav) mainNav.style.display = (screenId === 'battle') ? 'none' : 'grid';
 
-        if (screenId !== 'missions' && patrolIntervalId) {
+        if (patrolIntervalId) {
             clearInterval(patrolIntervalId);
             patrolIntervalId = null;
+        }
+        
+        if (eventTimerIntervalId) {
+            clearInterval(eventTimerIntervalId);
+            eventTimerIntervalId = null;
         }
 
         if (screenId === 'inventory') renderInventory();
@@ -1478,6 +1484,150 @@
         });
     }
 
+    // --- EVENTOS ---
+
+    function formatTime(ms) {
+        if (ms <= 0) return "0d 0h 0m 0s";
+        let seconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(seconds / 60);
+        let hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    function renderEventsScreen() {
+        const container = document.getElementById('event-new-server');
+        const newServerEvent = gameEvents.newServer;
+        const now = new Date().getTime();
+
+        if (!newServerEvent || !newServerEvent.active || now > newServerEvent.endTime) {
+            container.innerHTML = `<p class="text-center text-2xl text-gray-400">Nenhum evento de Novo Servidor ativo no momento.</p>`;
+            return;
+        }
+
+        const endTime = newServerEvent.endTime;
+        
+        let rewardsHtml = `<div id="event-timer" class="text-center text-2xl font-bold text-yellow-300 mb-6"></div>`;
+
+        rewardsHtml += `<div class="space-y-4">` + eventsConfig.newServerRewards.map(rewardConfig => {
+            let currentProgress = 0;
+            const goal = rewardConfig.goal;
+            const isClaimed = player.claimedEventRewards.newServer.includes(rewardConfig.id);
+
+            if (rewardConfig.type === 'level') {
+                currentProgress = player.level;
+            } else if (rewardConfig.type === 'highestRefine') {
+                currentProgress = player.stats.highestRefine;
+            } else if (rewardConfig.type === 'stat') {
+                currentProgress = player.stats[rewardConfig.stat] || 0;
+            }
+
+            const canClaim = currentProgress >= goal;
+            const progressPercent = Math.min((currentProgress / goal) * 100, 100);
+
+            const rewardItemDetails = rewardConfig.reward;
+            const sourceList = rewardItemDetails.type === 'weapon' ? weapons : armors;
+            const itemTemplate = sourceList.find(i => i.id === rewardItemDetails.id);
+            const rewardItem = applyRarityToItem(JSON.parse(JSON.stringify(itemTemplate)), rewardItemDetails.rarity);
+            
+            return `
+                <div class="bg-gray-800 p-4 rounded-lg border-2 ${isClaimed ? 'border-green-600' : 'border-gray-700'} flex flex-col md:flex-row items-center gap-4">
+                    <div class="w-full md:w-1/4 text-center">
+                        <p class="text-xl font-bold text-yellow-300">${rewardConfig.description}</p>
+                        <p class="text-lg">${currentProgress.toLocaleString()} / ${goal.toLocaleString()}</p>
+                        <div class="progress-bar-container w-full h-4 my-2">
+                            <div class="progress-bar" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 bg-gray-900 p-2 rounded-lg flex items-center gap-4">
+                         <img src="${rewardItem.image}" alt="${rewardItem.name}" class="w-24 h-24 object-contain rounded-md">
+                         <div>
+                            <h4 class="text-xl font-bold">${getItemNameWithRarity(rewardItem)}</h4>
+                            <p class="text-sm">${rewardItem.hasOwnProperty('baseDamage') ? `Dano: ${rewardItem.baseDamage}` : `Defesa: ${rewardItem.stats.defense}`}</p>
+                         </div>
+                    </div>
+                    <div class="w-full md:w-1/4 text-center">
+                         <button onclick="claimEventReward('${rewardConfig.id}')" class="btn-game ${canClaim && !isClaimed ? 'bg-green-700' : 'bg-gray-500'} w-full p-2 rounded-md font-bold text-lg" ${!canClaim || isClaimed ? 'disabled' : ''}>
+                            ${isClaimed ? 'COLETADO' : 'COLETAR'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('') + `</div>`;
+        
+        container.innerHTML = rewardsHtml;
+
+        const updateTimer = () => {
+            const timerEl = document.getElementById('event-timer');
+            const remaining = endTime - new Date().getTime();
+            if (timerEl) {
+                if (remaining > 0) {
+                    timerEl.innerHTML = `Tempo Restante: <span class="text-red-400">${formatTime(remaining)}</span>`;
+                } else {
+                    timerEl.innerHTML = "Evento Encerrado!";
+                    clearInterval(eventTimerIntervalId);
+                }
+            }
+        };
+
+        updateTimer();
+        if (eventTimerIntervalId) clearInterval(eventTimerIntervalId);
+        eventTimerIntervalId = setInterval(updateTimer, 1000);
+    }
+
+    function claimEventReward(rewardId) {
+        if (!gameEvents.newServer || !gameEvents.newServer.active || new Date().getTime() > gameEvents.newServer.endTime) {
+            showToast("Este evento não está mais ativo.", "error");
+            return;
+        }
+
+        const rewardConfig = eventsConfig.newServerRewards.find(r => r.id === rewardId);
+        if (!rewardConfig) return;
+
+        if (player.claimedEventRewards.newServer.includes(rewardId)) {
+            showToast("Você já coletou esta recompensa.", "error");
+            return;
+        }
+
+        let currentProgress = 0;
+        if (rewardConfig.type === 'level') currentProgress = player.level;
+        else if (rewardConfig.type === 'highestRefine') currentProgress = player.stats.highestRefine;
+        else if (rewardConfig.type === 'stat') currentProgress = player.stats[rewardConfig.stat] || 0;
+        
+        if (currentProgress < rewardConfig.goal) {
+            showToast("Você ainda não completou o objetivo.", "error");
+            return;
+        }
+
+        const rewardItemDetails = rewardConfig.reward;
+        const sourceList = rewardItemDetails.type === 'weapon' ? weapons : armors;
+        const itemTemplate = sourceList.find(i => i.id === rewardItemDetails.id);
+        
+        if (!itemTemplate) {
+            showToast("Erro ao encontrar o item de recompensa.", "error");
+            return;
+        }
+
+        let newItem = JSON.parse(JSON.stringify(itemTemplate));
+        newItem = applyRarityToItem(newItem, rewardItemDetails.rarity || 'LENDARIO');
+        newItem.refineLevel = 0;
+        newItem.instanceId = player.itemInstanceCounter++;
+        
+        const inventoryListName = rewardItemDetails.type + 's';
+        player.inventory[inventoryListName].push(newItem);
+        
+        player.claimedEventRewards.newServer.push(rewardId);
+        
+        soundManager.play('levelUp');
+        showToast(`Recompensa "${rewardConfig.description}" coletada!`, 'success');
+        
+        renderEventsScreen();
+        triggerAutoSave();
+    }
+    
     // --- LÓGICA DO JOGO ---
     function startMission(missionId) {
         if (player.activeMission || player.offlinePatrol.active) return;
@@ -2234,6 +2384,150 @@
             renderAchievements();
             triggerAutoSave();
         }
+    }
+
+    // --- EVENTOS ---
+
+    function formatTime(ms) {
+        if (ms <= 0) return "0d 0h 0m 0s";
+        let seconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(seconds / 60);
+        let hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    function renderEventsScreen() {
+        const container = document.getElementById('event-new-server');
+        const newServerEvent = gameEvents.newServer;
+        const now = new Date().getTime();
+
+        if (!newServerEvent || !newServerEvent.active || now > newServerEvent.endTime) {
+            container.innerHTML = `<p class="text-center text-2xl text-gray-400">Nenhum evento de Novo Servidor ativo no momento.</p>`;
+            return;
+        }
+
+        const endTime = newServerEvent.endTime;
+        
+        let rewardsHtml = `<div id="event-timer" class="text-center text-2xl font-bold text-yellow-300 mb-6"></div>`;
+
+        rewardsHtml += `<div class="space-y-4">` + eventsConfig.newServerRewards.map(rewardConfig => {
+            let currentProgress = 0;
+            const goal = rewardConfig.goal;
+            const isClaimed = player.claimedEventRewards.newServer.includes(rewardConfig.id);
+
+            if (rewardConfig.type === 'level') {
+                currentProgress = player.level;
+            } else if (rewardConfig.type === 'highestRefine') {
+                currentProgress = player.stats.highestRefine;
+            } else if (rewardConfig.type === 'stat') {
+                currentProgress = player.stats[rewardConfig.stat] || 0;
+            }
+
+            const canClaim = currentProgress >= goal;
+            const progressPercent = Math.min((currentProgress / goal) * 100, 100);
+
+            const rewardItemDetails = rewardConfig.reward;
+            const sourceList = rewardItemDetails.type === 'weapon' ? weapons : armors;
+            const itemTemplate = sourceList.find(i => i.id === rewardItemDetails.id);
+            const rewardItem = applyRarityToItem(JSON.parse(JSON.stringify(itemTemplate)), rewardItemDetails.rarity);
+            
+            return `
+                <div class="bg-gray-800 p-4 rounded-lg border-2 ${isClaimed ? 'border-green-600' : 'border-gray-700'} flex flex-col md:flex-row items-center gap-4">
+                    <div class="w-full md:w-1/4 text-center">
+                        <p class="text-xl font-bold text-yellow-300">${rewardConfig.description}</p>
+                        <p class="text-lg">${currentProgress.toLocaleString()} / ${goal.toLocaleString()}</p>
+                        <div class="progress-bar-container w-full h-4 my-2">
+                            <div class="progress-bar" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 bg-gray-900 p-2 rounded-lg flex items-center gap-4">
+                         <img src="${rewardItem.image}" alt="${rewardItem.name}" class="w-24 h-24 object-contain rounded-md">
+                         <div>
+                            <h4 class="text-xl font-bold">${getItemNameWithRarity(rewardItem)}</h4>
+                            <p class="text-sm">${rewardItem.hasOwnProperty('baseDamage') ? `Dano: ${rewardItem.baseDamage}` : `Defesa: ${rewardItem.stats.defense}`}</p>
+                         </div>
+                    </div>
+                    <div class="w-full md:w-1/4 text-center">
+                         <button onclick="claimEventReward('${rewardConfig.id}')" class="btn-game ${canClaim && !isClaimed ? 'bg-green-700' : 'bg-gray-500'} w-full p-2 rounded-md font-bold text-lg" ${!canClaim || isClaimed ? 'disabled' : ''}>
+                            ${isClaimed ? 'COLETADO' : 'COLETAR'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('') + `</div>`;
+        
+        container.innerHTML = rewardsHtml;
+
+        const updateTimer = () => {
+            const timerEl = document.getElementById('event-timer');
+            const remaining = endTime - new Date().getTime();
+            if (timerEl) {
+                if (remaining > 0) {
+                    timerEl.innerHTML = `Tempo Restante: <span class="text-red-400">${formatTime(remaining)}</span>`;
+                } else {
+                    timerEl.innerHTML = "Evento Encerrado!";
+                    clearInterval(eventTimerIntervalId);
+                }
+            }
+        };
+
+        updateTimer();
+        if (eventTimerIntervalId) clearInterval(eventTimerIntervalId);
+        eventTimerIntervalId = setInterval(updateTimer, 1000);
+    }
+
+    function claimEventReward(rewardId) {
+        if (!gameEvents.newServer || !gameEvents.newServer.active || new Date().getTime() > gameEvents.newServer.endTime) {
+            showToast("Este evento não está mais ativo.", "error");
+            return;
+        }
+
+        const rewardConfig = eventsConfig.newServerRewards.find(r => r.id === rewardId);
+        if (!rewardConfig) return;
+
+        if (player.claimedEventRewards.newServer.includes(rewardId)) {
+            showToast("Você já coletou esta recompensa.", "error");
+            return;
+        }
+
+        let currentProgress = 0;
+        if (rewardConfig.type === 'level') currentProgress = player.level;
+        else if (rewardConfig.type === 'highestRefine') currentProgress = player.stats.highestRefine;
+        else if (rewardConfig.type === 'stat') currentProgress = player.stats[rewardConfig.stat] || 0;
+        
+        if (currentProgress < rewardConfig.goal) {
+            showToast("Você ainda não completou o objetivo.", "error");
+            return;
+        }
+
+        const rewardItemDetails = rewardConfig.reward;
+        const sourceList = rewardItemDetails.type === 'weapon' ? weapons : armors;
+        const itemTemplate = sourceList.find(i => i.id === rewardItemDetails.id);
+        
+        if (!itemTemplate) {
+            showToast("Erro ao encontrar o item de recompensa.", "error");
+            return;
+        }
+
+        let newItem = JSON.parse(JSON.stringify(itemTemplate));
+        newItem = applyRarityToItem(newItem, rewardItemDetails.rarity || 'LENDARIO');
+        newItem.refineLevel = 0;
+        newItem.instanceId = player.itemInstanceCounter++;
+        
+        const inventoryListName = rewardItemDetails.type + 's';
+        player.inventory[inventoryListName].push(newItem);
+        
+        player.claimedEventRewards.newServer.push(rewardId);
+        
+        soundManager.play('levelUp');
+        showToast(`Recompensa "${rewardConfig.description}" coletada!`, 'success');
+        
+        renderEventsScreen();
+        triggerAutoSave();
     }
 
     // --- GANGUES (FIREBASE) ---
