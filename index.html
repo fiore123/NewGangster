@@ -3005,7 +3005,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
         }
 
         if (type === 'weapon') {
-            newItem.id = (weapons.length ? Math.max(0, .weapons.map(w => w.id)) : 0) + 1;
+            newItem.id = (weapons.length ? Math.max(0, weapons.map(w => w.id)) : 0) + 1;
             newItem.baseDamage = parseInt(document.getElementById('admin-create-baseDamage').value) || 0;
             weapons.push(newItem);
         } else { // armor
