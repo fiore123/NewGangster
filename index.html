@@ -56,7 +56,7 @@
         }
 
         .game-container {
-            max-width: 1400px; /* Aumentado */
+            max-width: 1400px;
             margin: auto;
             border: 2px solid #444;
             background-color: rgba(26, 26, 26, 0.95);
@@ -650,13 +650,13 @@
     // --- CONSTANTES DE JOGO ---
     const PATROL_MONEY_PER_MINUTE = 10;
     const PATROL_XP_PER_MINUTE = 5;
-    const PATROL_STONES_PER_HOUR_CHANCE = 50; // 50% de chance de ganhar 1 pedra por hora
-    const PATROL_EQUIPMENT_PER_HOUR_CHANCE = 20; // 20% de chance de ganhar 1 equipamento por hora
-    const MAX_PATROL_MINUTES = 8 * 60; // Máximo de 8 horas de recompensa
-    const WEAPON_DAMAGE_PERCENT_PER_LEVEL = 0.05; // 5% de bônus de dano por nível de refinamento
-    const ARMOR_STAT_PERCENT_PER_LEVEL = 0.05;    // 5% de bônus de status por nível de refinamento
+    const PATROL_STONES_PER_HOUR_CHANCE = 50;
+    const PATROL_EQUIPMENT_PER_HOUR_CHANCE = 20;
+    const MAX_PATROL_MINUTES = 8 * 60;
+    const WEAPON_DAMAGE_PERCENT_PER_LEVEL = 0.05;
+    const ARMOR_STAT_PERCENT_PER_LEVEL = 0.05;
     const MAX_REFINE_LEVEL = 12;
-    const ENERGY_REGEN_SECONDS_PER_POINT = 300; // 5 minutos
+    const ENERGY_REGEN_SECONDS_PER_POINT = 300;
     const ENERGY_COST_PER_FIGHT = 10;
     const GOLD_COST_REFILL_ENERGY = 5;
     const AVATARS = {
@@ -3178,7 +3178,6 @@
                     newServerCheckbox.checked = events.newServer.active;
                     if (events.newServer.endTime) {
                         const date = new Date(events.newServer.endTime);
-                        // Formato YYYY-MM-DDTHH:MM
                         const year = date.getFullYear();
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
