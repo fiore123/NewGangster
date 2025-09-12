@@ -138,6 +138,7 @@
         .rarity-BLACKOUT { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de; }
     </style>
 
+<style>
 /* --- Mobile UI improvements (auto-inserted) --- */
 @media (max-width: 768px) {
   /* Bigger bottom nav buttons */
@@ -195,6 +196,8 @@
   .hud { padding: 6px 8px; font-size: 13px; }
 }
 /* --- end mobile UI improvements --- */
+</style>
+
 
 </head>
 <body class="p-4">
@@ -3851,20 +3854,15 @@
     </script>
 
 
-<!-- Auto-inserted mobile menu overlay -->
-<div id="mobileMenuOverlay" class="mobile-menu-overlay" aria-hidden="true">
-  <div id="mobileMenuPanel" class="mobile-menu-panel" role="dialog" aria-modal="true">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <strong>Menu</strong>
-      <button id="mobileMenuClose" class="btn-game" aria-label="Fechar menu">✕</button>
-    </div>
-    <nav id="mobileMenuNav">
+<nav id="mobileMenuNav">
       <!-- cloned from nav items at runtime -->
     </nav>
   </div>
 </div>
 
 
+<script>
+<script>
 /* --- Auto-inserted mobile JS helpers --- */
 (function(){
   // Ensure all nav buttons have data-screen attributes (desktop and mobile)
@@ -4005,10 +4003,22 @@
   else ready();
 })();
 /* --- end mobile JS helpers --- */
+</script>
 
+
+<!-- Auto-inserted mobile menu overlay -->
+<div id="mobileMenuOverlay" class="mobile-menu-overlay" aria-hidden="true">
+  <div id="mobileMenuPanel" class="mobile-menu-panel" role="dialog" aria-modal="true">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong>Menu</strong>
+      <button id="mobileMenuClose" class="btn-game" aria-label="Fechar menu">✕</button>
+    </div>
+    
 </body>
 </html>
 
 
 
 
+
+</script>
