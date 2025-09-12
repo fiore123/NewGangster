@@ -179,18 +179,18 @@
             </div>
         </header>
 
-        <nav id="main-nav" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-11 gap-2 mb-6">
-            <button onclick="showScreen('main')" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
-            <button onclick="showScreen('missions')" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
-            <button onclick="showScreen('events')" class="btn-game bg-orange-700 p-3 rounded-md font-bold text-lg uppercase" style="border-color: #c05621;"><i class="fas fa-calendar-alt"></i> Eventos</button>
-            <button onclick="showScreen('achievements')" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
-            <button onclick="showScreen('inventory')" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
-            <button onclick="showScreen('enemies')" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
-            <button onclick="showScreen('bosses')" class="btn-game bg-red-900 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-crown"></i> Chefes</button>
-            <button onclick="showScreen('shop')" class="btn-game bg-green-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-store"></i> Loja</button>
-            <button onclick="showScreen('gang')" class="btn-game bg-indigo-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-users"></i> Gangue</button>
-            <button onclick="showScreen('leaderboard')" class="btn-game bg-teal-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Ranking</button>
-            <button onclick="showScreen('admin')" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
+        <nav id="main-nav-desktop" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-11 gap-2 mb-6">
+            <button onclick="showScreen('main')" data-screen="main" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
+            <button onclick="showScreen('missions')" data-screen="missions" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
+            <button onclick="showScreen('events')" data-screen="events" class="btn-game bg-orange-700 p-3 rounded-md font-bold text-lg uppercase" style="border-color: #c05621;"><i class="fas fa-calendar-alt"></i> Eventos</button>
+            <button onclick="showScreen('achievements')" data-screen="achievements" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
+            <button onclick="showScreen('inventory')" data-screen="inventory" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
+            <button onclick="showScreen('enemies')" data-screen="enemies" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
+            <button onclick="showScreen('bosses')" data-screen="bosses" class="btn-game bg-red-900 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-crown"></i> Chefes</button>
+            <button onclick="showScreen('shop')" data-screen="shop" class="btn-game bg-green-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-store"></i> Loja</button>
+            <button onclick="showScreen('gang')" data-screen="gang" class="btn-game bg-indigo-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-users"></i> Gangue</button>
+            <button onclick="showScreen('leaderboard')" data-screen="leaderboard" class="btn-game bg-teal-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Ranking</button>
+            <button onclick="showScreen('admin')" data-screen="admin" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
         </nav>
 
         <main id="game-content">
