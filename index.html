@@ -137,12 +137,75 @@
         .rarity-LENDARIO { color: #ed8936; text-shadow: 0 0 8px #ed8936; }
         .rarity-BLACKOUT { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de; }
     </style>
+
+/* --- Mobile UI improvements (auto-inserted) --- */
+@media (max-width: 768px) {
+  /* Bigger bottom nav buttons */
+  #main-nav-mobile .btn-game {
+    padding: 10px 8px;
+    font-size: 14px;
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Slightly larger icons and labels */
+  #main-nav-mobile .btn-game .icon { font-size: 20px; display:block; line-height:1; }
+  #main-nav-mobile .btn-game .label { font-size: 11px; margin-top:4px; }
+
+  /* Make header compact */
+  header.site-header { padding: 8px 12px; }
+
+  /* Reduce padding of content */
+  .screen { padding: 12px; }
+
+  /* Mobile menu overlay when hamburger used */
+  .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 9998;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .mobile-menu-panel {
+    width: 100%;
+    max-height: 60vh;
+    background: var(--bg, #0b0b0b);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+    transform: translateY(100%);
+    transition: transform 240ms ease-in-out;
+    z-index: 9999;
+  }
+  .mobile-menu-overlay.open { display: flex; }
+  .mobile-menu-panel.open { transform: translateY(0%); }
+
+  /* active state for nav */
+  #main-nav-mobile .btn-game.active { box-shadow: 0 6px 18px rgba(0,0,0,0.35); transform: translateY(-2px); }
+
+  /* compact leaderboard or HUD */
+  .hud { padding: 6px 8px; font-size: 13px; }
+}
+/* --- end mobile UI improvements --- */
+
 </head>
 <body class="p-4">
 
     <div id="game-container" class="game-container rounded-lg p-4 md:p-8">
 
         <header class="mb-6 border-b-2 border-gray-700 pb-4">
+<button id="mobile-hamburger" class="btn-game mobile-hamburger" aria-label="Abrir menu" style="display:none;">
+  <span class="icon">☰</span>
+</button>
+
             <div id="event-banner" class="hidden text-center bg-yellow-500 text-black font-bold p-2 rounded-lg mb-4 text-xl"></div>
             <div class="flex flex-wrap justify-between items-center">
                 <div class="w-full md:w-1/3 text-center md:text-left mb-4 md:mb-0">
@@ -3786,6 +3849,162 @@
         showScreen('main');
     };
     </script>
+
+
+<!-- Auto-inserted mobile menu overlay -->
+<div id="mobileMenuOverlay" class="mobile-menu-overlay" aria-hidden="true">
+  <div id="mobileMenuPanel" class="mobile-menu-panel" role="dialog" aria-modal="true">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong>Menu</strong>
+      <button id="mobileMenuClose" class="btn-game" aria-label="Fechar menu">✕</button>
+    </div>
+    <nav id="mobileMenuNav">
+      <!-- cloned from nav items at runtime -->
+    </nav>
+  </div>
+</div>
+
+
+/* --- Auto-inserted mobile JS helpers --- */
+(function(){
+  // Ensure all nav buttons have data-screen attributes (desktop and mobile)
+  function ensureDataScreen() {
+    document.querySelectorAll('#main-nav-desktop .btn-game, #main-nav-mobile .btn-game').forEach(btn => {
+      if (!btn.dataset.screen) {
+        const oc = btn.getAttribute('onclick') || '';
+        const m = oc.match(/showScreen\('([a-z-]+)'\)/);
+        if (m) btn.dataset.screen = m[1];
+        else {
+          // try data-target or href
+          const ds = btn.getAttribute('data-target') || btn.getAttribute('href') || '';
+          if (ds) btn.dataset.screen = ds.replace('#','');
+        }
+      }
+    });
+  }
+
+  // Toggle mobile menu overlay
+  function openMobileMenu() {
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const panel = document.getElementById('mobileMenuPanel');
+    if (!overlay || !panel) return;
+    overlay.classList.add('open');
+    panel.classList.add('open');
+    overlay.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMobileMenu() {
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const panel = document.getElementById('mobileMenuPanel');
+    if (!overlay || !panel) return;
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  }
+
+  // Clone desktop nav items into mobile menu nav (if mobile menu empty)
+  function populateMobileMenu() {
+    const mobileNav = document.getElementById('mobileMenuNav');
+    if (!mobileNav) return;
+    if (mobileNav.children.length > 0) return; // already populated
+    const desktopBtns = document.querySelectorAll('#main-nav-desktop .btn-game');
+    desktopBtns.forEach(btn => {
+      const clone = btn.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.classList.add('mobile-menu-item');
+      // ensure click closes menu and shows screen
+      clone.addEventListener('click', function(e){
+        // find data-screen and call showScreen if exists
+        const screen = clone.dataset.screen;
+        if (screen && typeof window.showScreen === 'function') {
+          window.showScreen(screen);
+        }
+        closeMobileMenu();
+      });
+      mobileNav.appendChild(clone);
+    });
+    // if no desktop buttons found, try mobile nav as source
+    if (desktopBtns.length === 0) {
+      const mobileBtns = document.querySelectorAll('#main-nav-mobile .btn-game');
+      mobileBtns.forEach(btn => {
+        const clone = btn.cloneNode(true);
+        clone.removeAttribute('id');
+        clone.classList.add('mobile-menu-item');
+        clone.addEventListener('click', function(){
+          const screen = clone.dataset.screen;
+          if (screen && typeof window.showScreen === 'function') {
+            window.showScreen(screen);
+          }
+          closeMobileMenu();
+        });
+        mobileNav.appendChild(clone);
+      });
+    }
+  }
+
+  // Toggle hamburger visibility depending on viewport and presence of mobile nav
+  function updateHamburgerVisibility() {
+    const hb = document.getElementById('mobile-hamburger');
+    if (!hb) return;
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      hb.style.display = 'inline-flex';
+    } else {
+      hb.style.display = 'none';
+    }
+  }
+
+  // Attach events once DOM ready
+  function ready() {
+    ensureDataScreen();
+    populateMobileMenu();
+    updateHamburgerVisibility();
+
+    const hb = document.getElementById('mobile-hamburger');
+    if (hb) {
+      hb.addEventListener('click', function(){ populateMobileMenu(); openMobileMenu(); });
+    }
+    const closeBtn = document.getElementById('mobileMenuClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeMobileMenu);
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (overlay) overlay.addEventListener('click', function(e){
+      if (e.target === overlay) closeMobileMenu();
+    });
+
+    // re-evaluate on resize/orientation change
+    window.addEventListener('resize', updateHamburgerVisibility);
+    window.addEventListener('orientationchange', updateHamburgerVisibility);
+
+    // Attach behavior to nav buttons to add active class by data-screen
+    document.querySelectorAll('#main-nav-desktop .btn-game, #main-nav-mobile .btn-game').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const screen = btn.dataset.screen;
+        if (screen) {
+          document.querySelectorAll('#main-nav-desktop .btn-game, #main-nav-mobile .btn-game').forEach(b=>b.classList.remove('active'));
+          document.querySelectorAll('#main-nav-desktop .btn-game[data-screen="'+screen+'"], #main-nav-mobile .btn-game[data-screen="'+screen+'" ]').forEach(b=>b.classList.add('active'));
+        }
+      });
+    });
+
+    // Expose closeMoreOptionsModal globally if exists or create fallback
+    if (typeof closeMoreOptionsModal === 'function') {
+      if (!window.closeMoreOptionsModal) window.closeMoreOptionsModal = closeMoreOptionsModal;
+    } else if (!window.closeMoreOptionsModal) {
+      window.closeMoreOptionsModal = function(){ 
+        try {
+          const modal = document.getElementById('moreOptionsModal') || document.querySelector('.more-options-modal');
+          if (!modal) return;
+          if (modal.classList) { modal.classList.remove('open'); modal.classList.add('hidden'); }
+          else modal.style.display = 'none';
+        } catch(e){ console.error(e); }
+      };
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
+})();
+/* --- end mobile JS helpers --- */
 
 </body>
 </html>
