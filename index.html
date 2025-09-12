@@ -838,12 +838,18 @@
     }
 
     function showShopCategory(category) {
-        document.querySelectorAll('.shop-category').forEach(el => el.classList.remove('active'));
-        document.getElementById(`shop-${category}`).classList.add('active');
+        // Primeiro, esconde todas as divs de categoria da loja
+        document.getElementById('shop-weapons').style.display = 'none';
+        document.getElementById('shop-armors').style.display = 'none';
+        document.getElementById('shop-potions').style.display = 'none';
+    
+        // Depois, mostra apenas a div da categoria clicada, forçando o display para 'grid'
+        document.getElementById(`shop-${category}`).style.display = 'grid';
+    
+        // Por fim, atualiza o estilo do botão da aba que foi clicada
         document.querySelectorAll('#screen-shop .tab-btn').forEach(el => el.classList.remove('active'));
         document.querySelector(`#screen-shop .tab-btn[data-category="${category}"]`).classList.add('active');
-    }
-    
+    }    
     function showEventCategory(category) {
         document.querySelectorAll('.event-category').forEach(el => el.classList.remove('active'));
         document.getElementById(`event-${category}`).classList.add('active');
@@ -3783,6 +3789,7 @@
 
 </body>
 </html>
+
 
 
 
