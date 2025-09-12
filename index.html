@@ -497,45 +497,6 @@ const PATROL_MONEY_PER_MINUTE = 10;
     };
 
 
-    // --- FUNÇÕES DE UI E NAVEGAÇÃO ---
-    function showScreen(screenId) {
-        if (isBattleInProgress && screenId !== 'battle') return;
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        const screenElement = document.getElementById(`screen-${screenId}`);
-        if (screenElement) screenElement.classList.add('active');
-        
-        const mainNav = document.getElementById('main-nav');
-        if(mainNav) mainNav.style.display = (screenId === 'battle') ? 'none' : 'grid';
-
-        if (patrolIntervalId) {
-            clearInterval(patrolIntervalId);
-            patrolIntervalId = null;
-        }
-        
-        if (eventTimerIntervalId) {
-            clearInterval(eventTimerIntervalId);
-            eventTimerIntervalId = null;
-        }
-
-        if (screenId === 'inventory') renderInventory();
-        if (screenId === 'admin') { 
-            populateAdminSelectors(); 
-            showAdminCreator('item-creator'); 
-            loadAdminEventStatus(); 
-            adminRenderPlayerManager();
-            adminRenderGangManager();
-            renderAdminNewServerRewardsEditor();
-        }
-        if (screenId === 'events') renderEventsScreen();
-        if (screenId === 'bosses') renderBosses();
-        if (screenId === 'achievements') renderAchievements();
-        if (screenId === 'gang') renderGangScreen();
-        if (screenId === 'leaderboard') renderLeaderboard('level');
-
-        if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons('enemies'); }
-        if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons('shop'); }
-        if (screenId === 'missions') { renderMissions(); renderRefreshButtons('missions'); }
-    }
 
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
