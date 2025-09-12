@@ -3009,7 +3009,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
             newItem.baseDamage = parseInt(document.getElementById('admin-create-baseDamage').value) || 0;
             weapons.push(newItem);
         } else { // armor
-            newItem.id = (armors.length ? Math.max(0, .armors.map(a => a.id)) : 0) + 1;
+            newItem.id = (armors.length ? Math.max(0, armors.map(a => a.id)) : 0) + 1;
             newItem.stats = {
                 defense: parseInt(document.getElementById('admin-create-stat-defense').value) || 0,
                 hp: parseInt(document.getElementById('admin-create-stat-hp').value) || 0,
@@ -3362,7 +3362,7 @@ const PATROL_MONEY_PER_MINUTE = 10;
     }
 
     function updatePlayerItems() {
-        const allPlayerItems = [player.weapon, player.armor, .player.inventoryweapons, .player.inventoryarmors];
+        const allPlayerItems = [player.weapon, player.armor, player.inventoryweapons, player.inventoryarmors];
 
         for (const item of allPlayerItems) {
             if (!item || item.id === 0) continue;
@@ -3441,11 +3441,11 @@ const PATROL_MONEY_PER_MINUTE = 10;
             if(docSnap.exists()){
                 const loadedData = docSnap.data();
 
-                player = { ..initialState, ..loadedData };
-                playerinventory = { ..initialStateinventory, .......(loadedDatainventory || {}) };
+                player = { .initialState, .loadedData };
+                playerinventory = { ..initialStateinventory, .........(loadedDatainventory || {}) };
                 player.inventoryweapons = player.inventoryweapons || [];
                 player.inventoryarmors = player.inventoryarmors || [];
-                playerclaimedEventRewards = { ..initialStateclaimedEventRewards, .......(loadedDataclaimedEventRewards || {}) };
+                playerclaimedEventRewards = { ..initialStateclaimedEventRewards, .........(loadedDataclaimedEventRewards || {}) };
                 
                 showToast("Progresso carregado.", "success");
             } else {
@@ -3680,3 +3680,5 @@ window.onload = async function() {
 
 </body>
 </html>
+// Ensure global reference
+if (typeof closeMoreOptionsModal === 'function' && !window.closeMoreOptionsModal) window.closeMoreOptionsModal = closeMoreOptionsModal;
