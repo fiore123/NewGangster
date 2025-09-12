@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mundo Gangster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -18,34 +18,82 @@
         
         // Expose Firebase modules to the global window object
         window.firebase = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
-            getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot,
-            collection, increment, query, orderBy, limit, getDocs, setLogLevel, deleteDoc
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            updateDoc,
+            arrayUnion,
+            arrayRemove,
+            onSnapshot,
+            collection,
+            increment,
+            query,
+            orderBy,
+            limit,
+            getDocs,
+            setLogLevel,
+            deleteDoc
         };
     </script>
     <style>
-        /* Estilos Base */
+        /* Estilos personalizados e animações */
         body {
             font-family: 'Teko', sans-serif;
             background-color: #1a1a1a;
             color: #f0f0f0;
             background-image: url('https://www.transparenttextures.com/patterns/dark-denim.png');
         }
-        .btn-game { transition: all 0.2s ease-in-out; border-bottom: 4px solid #8c0000; }
-        .btn-game:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn-game:disabled { filter: grayscale(80%); cursor: not-allowed; border-bottom: 4px solid #444; }
+
+        .game-container {
+            max-width: 1400px;
+            margin: auto;
+            border: 2px solid #444;
+            background-color: rgba(26, 26, 26, 0.95);
+            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .btn-game {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 4px solid #8c0000;
+            will-change: transform, filter, border-bottom-width;
+        }
+        .btn-game:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            border-bottom-width: 6px;
+        }
+        .btn-game:active:not(:disabled) {
+            transform: translateY(1px);
+            border-bottom-width: 2px;
+        }
+        .btn-game:disabled {
+            filter: grayscale(80%);
+            cursor: not-allowed;
+            border-bottom: 4px solid #444;
+        }
+        
+        .btn-stat { transition: all 0.2s ease; }
+        .btn-stat:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .progress-bar-container { background-color: #333; border-radius: 5px; overflow: hidden; border: 1px solid #555; }
         .progress-bar { background: linear-gradient(90deg, #ffd700, #ffae00); height: 100%; transition: width 0.5s ease-in-out; }
+        .energy-bar { background: linear-gradient(90deg, #f5d442, #f5a623); height: 100%; transition: width 0.3s ease-in-out; }
         .hp-bar { background: linear-gradient(90deg, #ff0000, #8b0000); height: 100%; transition: width 0.3s ease-in-out; }
-        .screen { display: none; }
-        .screen.active { display: block; }
-        .tab-btn, .dist-btn { background-color: #4a5568; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
-        .tab-btn.active, .dist-btn.active { background-color: #a0aec0; color: #1a202c; border-bottom: 4px solid #f56565; }
-        textarea, select, input[type=text], input[type=number], input[type=checkbox], input[type=datetime-local] { background-color: #2d3748; border: 1px solid #4a5568; color: #eee; border-radius: 4px; padding: 8px; }
 
-        /* Animações e Efeitos Visuais */
+        /* Animações de Batalha e Feedback */
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .shake { animation: shake 0.5s; }
+        
+        @keyframes screen-shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
+        .screen-shake { animation: screen-shake 0.2s; }
+
         @keyframes damage-popup { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
         .damage-text { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 2.5rem; font-weight: bold; pointer-events: none; animation: damage-popup 1s forwards; text-shadow: 0 0 5px black; color: red; white-space: nowrap; z-index: 10; }
         .damage-text.crit { color: yellow; font-size: 3rem; }
@@ -53,189 +101,531 @@
         .damage-text.heal { color: limegreen; }
         .damage-text.poison { color: darkorchid; font-size: 1.8rem;}
 
-        /* Estilos de Raridade */
-        .rarity-COMUM { color: #48bb78; } .rarity-RARO { color: #4299e1; } .rarity-EPICO { color: #9f7aea; }
-        .rarity-LENDARIO { color: #ed8936; } .rarity-BLACKOUT { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de; }
-        
-        /* --- LAYOUT DESKTOP --- */
-        .is-desktop body { padding: 1rem; }
-        .is-desktop .game-container {
-            max-width: 1400px; margin: auto; border: 2px solid #444; background-color: rgba(26, 26, 26, 0.95);
-            box-shadow: 0 0 25px rgba(0,0,0,0.9); border-radius: 0.5rem; padding: 2rem;
-        }
-        .is-desktop #main-nav-mobile, .is-desktop #more-options-modal { display: none; }
-        .is-desktop #main-nav-desktop { display: grid; }
-        
-        /* --- LAYOUT MOBILE (APK) --- */
-        .is-mobile body, .is-mobile html { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-        .is-mobile body { display: flex; flex-direction: column; }
-        .is-mobile .game-container {
-            display: flex; flex-direction: column; height: 100vh; width: 100vw; max-width: 100%;
-            margin: 0; border: none; box-shadow: none; border-radius: 0;
-        }
-        .is-mobile header { flex-shrink: 0; }
-        .is-mobile #game-content { flex-grow: 1; overflow-y: auto; }
-        .is-mobile #main-nav-desktop { display: none; }
-        .is-mobile #main-nav-mobile {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; display: flex;
-            justify-content: space-around; background-color: #111827; border-top: 2px solid #374151; padding: 4px 0;
-        }
-        .is-mobile #main-nav-mobile .btn-game {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem;
-            padding: 4px; border-radius: 8px; border-bottom-width: 2px; text-transform: none; width: 60px; height: 56px;
-        }
-        .is-mobile #main-nav-mobile .btn-game .fas { font-size: 1.25rem; margin-bottom: 2px; }
-        .is-mobile #main-nav-mobile .btn-game:hover:not(:disabled) { transform: none; filter: brightness(1.2); border-bottom-width: 2px; }
-        .is-mobile #main-nav-mobile .btn-game.active { background-color: #e53e3e; border-color: #f56565; }
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: #2d3748; padding: 2rem; border-radius: 0.5rem; border: 2px solid #4a5568; max-width: 90%; width: 500px; text-align: center; }
 
-        /* Modal "Mais Opções" */
-        #more-options-modal {
-            position: fixed; inset: 0; background-color: rgba(0,0,0,0.9); z-index: 200;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        #more-options-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; width: 100%; max-width: 400px;
-        }
-        #more-options-grid .btn-game { font-size: 1.25rem; padding: 1rem; }
-
-        /* Battle Screen específico */
+        /* Telas e Abas */
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .shop-category, .event-category { display: none; }
+        .event-category.active { display: block; }
+        .shop-category.active { display: grid; }
+        .admin-creator { display: none; }
+        .admin-creator.active { display: block; }
+        
         #screen-battle {
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://i.imgur.com/8i2g622.jpeg');
-            background-size: cover; background-position: center;
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://sdmntprsouthcentralus.oaiusercontent.com/files/00000000-81c8-61f7-bfd9-c2ffd7937e7a/raw?se=2025-09-12T03%3A40%3A48Z&sp=r&sv=2024-08-04&sr=b&scid=77f531db-c1d5-5875-bf02-0563396d4c1c&skoid=b0fd38cc-3d33-418f-920e-4798de4acdd1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-11T22%3A43%3A21Z&ske=2025-09-12T22%3A43%3A21Z&sks=b&skv=2024-08-04&sig=PbtoFJ8Myl5UQbNKWAAcOUvyIGGpEiwWYA7dnKdzdL8%3D');
+            background-size: cover;
+            background-position: center;
         }
-        .is-mobile #screen-battle { height: 100%; }
 
+        .tab-btn, .dist-btn { background-color: #4a5568; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+        .tab-btn.active, .dist-btn.active { background-color: #a0aec0; color: #1a202c; border-bottom: 4px solid #f56565; }
+        .dist-btn.active { border-color: #63b3ed; }
+
+        /* Correção da Imagem do Item */
+        .item-image { width: 100%; height: 128px; object-fit: contain; }
+        
+        textarea, select, input[type=text], input[type=number], input[type=checkbox], input[type=datetime-local] { background-color: #2d3748; border: 1px solid #4a5568; color: #eee; border-radius: 4px; padding: 8px; }
+        input[type=checkbox] { padding: 0; width: 1rem; height: 1rem; }
+        
+        /* Estilos de Raridade */
+        .rarity-COMUM { color: #48bb78; text-shadow: 0 0 2px #48bb78; }
+        .rarity-RARO { color: #4299e1; text-shadow: 0 0 4px #4299e1; }
+        .rarity-EPICO { color: #9f7aea; text-shadow: 0 0 6px #9f7aea; }
+        .rarity-LENDARIO { color: #ed8936; text-shadow: 0 0 8px #ed8936; }
+        .rarity-BLACKOUT { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #ff00de; }
     </style>
 </head>
-<body>
+<body class="p-4">
 
-    <div id="game-container" class="game-container">
-        <header class="p-2 border-b-2 border-gray-700">
-             <div id="event-banner" class="hidden text-center bg-yellow-500 text-black font-bold p-1 rounded-lg mb-2 text-sm"></div>
-             <div class="flex justify-between items-center gap-2">
-                 <div class="flex-shrink-0">
-                     <h1 class="text-2xl md:text-4xl font-bold text-red-500 uppercase tracking-wider">Mundo Gangster</h1>
-                      <div class="flex items-center gap-2">
-                         <p id="player-name" class="text-lg md:text-2xl text-yellow-400">Jogador</p>
-                         <button onclick="promptToChangeName()" title="Alterar Nome" class="text-xs bg-gray-600 hover:bg-gray-500 p-1 rounded-full w-5 h-5 flex items-center justify-center"><i class="fas fa-pencil-alt"></i></button>
-                     </div>
-                 </div>
-                  <div class="grid grid-cols-2 gap-2 text-xs md:text-lg flex-grow max-w-3xl">
-                     <div class="bg-gray-800 p-1 md:p-3 rounded-md col-span-1"><i class="fas fa-heart text-red-500"></i> <span id="player-hp">100/100</span></div>
-                     <div class="bg-gray-800 p-1 md:p-3 rounded-md col-span-1"><i class="fas fa-dollar-sign text-green-500"></i> <span id="player-money">500</span></div>
-                     <div class="bg-gray-800 p-1 md:p-3 rounded-md col-span-1 flex items-center justify-between">
-                         <span><i class="fas fa-bolt text-yellow-500"></i> <span id="player-energy">100/100</span></span>
-                         <button onclick="refillEnergy()" title="Recarregar Energia" class="bg-yellow-600 hover:bg-yellow-500 rounded-full w-4 h-4 md:w-6 md:h-6 font-bold text-xs flex items-center justify-center">+</button>
-                     </div>
-                     <div class="bg-gray-800 p-1 md:p-3 rounded-md col-span-1"><i class="fas fa-gem text-cyan-400"></i> <span id="player-gold">10</span></div>
-                 </div>
-             </div>
-              <div class="bg-gray-800 p-2 rounded-md mt-2">
-                 <div class="flex justify-between items-center mb-1 text-sm">
-                     <span><i class="fas fa-star text-yellow-500"></i> Nvl: <span id="player-level">1</span></span>
-                     <span id="player-xp-text">0 / 100 XP</span>
-                 </div>
-                 <div class="progress-bar-container w-full h-3"><div id="player-xp-bar" class="progress-bar" style="width: 0%;"></div></div>
-             </div>
-              <div id="player-equipment" class="mt-2 text-xs md:text-xl text-gray-300 grid grid-cols-1 md:grid-cols-2 gap-2">
-                 <div id="player-weapon" class="truncate"></div>
-                 <div id="player-armor" class="truncate"></div>
-             </div>
+    <div id="game-container" class="game-container rounded-lg p-4 md:p-8">
+
+        <header class="mb-6 border-b-2 border-gray-700 pb-4">
+            <div id="event-banner" class="hidden text-center bg-yellow-500 text-black font-bold p-2 rounded-lg mb-4 text-xl"></div>
+            <div class="flex flex-wrap justify-between items-center">
+                <div class="w-full md:w-1/3 text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold text-red-500 uppercase tracking-wider">Mundo Gangster</h1>
+                     <div class="flex items-center gap-2 justify-center md:justify-start">
+                         <p id="player-name" class="text-2xl text-yellow-400">Nome do Jogador</p>
+                         <button onclick="promptToChangeName()" title="Alterar Nome" class="text-sm bg-gray-600 hover:bg-gray-500 p-1 rounded-full w-6 h-6 flex items-center justify-center"><i class="fas fa-pencil-alt"></i></button>
+                    </div>
+                </div>
+                <div class="w-full md:w-2/3 grid grid-cols-2 lg:grid-cols-4 gap-4 text-lg">
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-heart text-red-500"></i> HP: <span id="player-hp">100 / 100</span></div>
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-dollar-sign text-green-500"></i> Dinheiro: <span id="player-money">500</span></div>
+                    <div class="bg-gray-800 p-3 rounded-md">
+                        <div class="flex justify-between items-center">
+                            <span><i class="fas fa-bolt text-yellow-500"></i> Energia: <span id="player-energy">100 / 100</span></span>
+                            <button onclick="refillEnergy()" title="Recarregar Energia" class="bg-yellow-600 hover:bg-yellow-500 rounded-full w-6 h-6 font-bold text-sm">+</button>
+                        </div>
+                        <div id="energy-regen-timer" class="text-xs text-gray-400 text-center mt-1"></div>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-md"><i class="fas fa-gem text-cyan-400"></i> Ouro: <span id="player-gold">10</span></div>
+
+                    <div class="bg-gray-800 p-3 rounded-md col-span-2 lg:col-span-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span><i class="fas fa-star text-yellow-500"></i> Nível: <span id="player-level">1</span></span>
+                            <span id="player-xp-text">0 / 100 XP</span>
+                        </div>
+                        <div class="progress-bar-container w-full h-4"><div id="player-xp-bar" class="progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="player-equipment" class="mt-4 text-center md:text-left text-xl text-gray-300 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div id="player-weapon"></div>
+                <div id="player-armor"></div>
+            </div>
         </header>
-        
-        <nav id="main-nav-desktop" class="hidden grid-cols-2 sm:grid-cols-4 md:grid-cols-11 gap-2 my-6">
-            <button onclick="showScreen('main')" data-screen="main" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
-            <button onclick="showScreen('missions')" data-screen="missions" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
-            <button onclick="showScreen('events')" data-screen="events" class="btn-game bg-orange-700 p-3 rounded-md font-bold text-lg uppercase" style="border-color: #c05621;"><i class="fas fa-calendar-alt"></i> Eventos</button>
-            <button onclick="showScreen('achievements')" data-screen="achievements" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
-            <button onclick="showScreen('inventory')" data-screen="inventory" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
-            <button onclick="showScreen('enemies')" data-screen="enemies" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
-            <button onclick="showScreen('bosses')" data-screen="bosses" class="btn-game bg-red-900 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-crown"></i> Chefes</button>
-            <button onclick="showScreen('shop')" data-screen="shop" class="btn-game bg-green-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-store"></i> Loja</button>
-            <button onclick="showScreen('gang')" data-screen="gang" class="btn-game bg-indigo-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-users"></i> Gangue</button>
-            <button onclick="showScreen('leaderboard')" data-screen="leaderboard" class="btn-game bg-teal-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Ranking</button>
-            <button onclick="showScreen('admin')" data-screen="admin" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
+
+        <nav id="main-nav" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-11 gap-2 mb-6">
+            <button onclick="showScreen('main')" class="btn-game bg-red-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-home"></i> Principal</button>
+            <button onclick="showScreen('missions')" class="btn-game bg-blue-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-list-check"></i> Missões</button>
+            <button onclick="showScreen('events')" class="btn-game bg-orange-700 p-3 rounded-md font-bold text-lg uppercase" style="border-color: #c05621;"><i class="fas fa-calendar-alt"></i> Eventos</button>
+            <button onclick="showScreen('achievements')" class="btn-game bg-yellow-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Conquistas</button>
+            <button onclick="showScreen('inventory')" class="btn-game bg-purple-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-briefcase"></i> Inventário</button>
+            <button onclick="showScreen('enemies')" class="btn-game bg-yellow-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-skull-crossbones"></i> Inimigos</button>
+            <button onclick="showScreen('bosses')" class="btn-game bg-red-900 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-crown"></i> Chefes</button>
+            <button onclick="showScreen('shop')" class="btn-game bg-green-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-store"></i> Loja</button>
+            <button onclick="showScreen('gang')" class="btn-game bg-indigo-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-users"></i> Gangue</button>
+            <button onclick="showScreen('leaderboard')" class="btn-game bg-teal-700 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-trophy"></i> Ranking</button>
+            <button onclick="showScreen('admin')" class="btn-game bg-gray-600 p-3 rounded-md font-bold text-lg uppercase"><i class="fas fa-user-shield"></i> Admin</button>
         </nav>
 
         <main id="game-content">
-            <div id="screen-main" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-events" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-leaderboard" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-achievements" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-inventory" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-shop" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-            <div id="screen-battle" class="screen p-4 relative overflow-hidden flex flex-col justify-between"></div>
-            <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg"></div>
-        </main>
-        
-        <nav id="main-nav-mobile" class="hidden">
-             <button onclick="showScreen('main')" class="btn-game bg-red-700 flex flex-col items-center" data-screen="main"><i class="fas fa-home"></i> <span>Principal</span></button>
-             <button onclick="showScreen('missions')" class="btn-game bg-blue-700 flex flex-col items-center" data-screen="missions"><i class="fas fa-list-check"></i> <span>Missões</span></button>
-             <button onclick="showScreen('enemies')" class="btn-game bg-yellow-700 flex flex-col items-center" data-screen="enemies"><i class="fas fa-skull-crossbones"></i> <span>Lutar</span></button>
-             <button onclick="showScreen('inventory')" class="btn-game bg-purple-700 flex flex-col items-center" data-screen="inventory"><i class="fas fa-briefcase"></i> <span>Inv.</span></button>
-             <button onclick="showScreen('shop')" class="btn-game bg-green-700 flex flex-col items-center" data-screen="shop"><i class="fas fa-store"></i> <span>Loja</span></button>
-             <button onclick="showMoreOptionsModal()" class="btn-game bg-gray-700 flex flex-col items-center" data-screen="more"><i class="fas fa-bars"></i> <span>Mais</span></button>
-        </nav>
-        
-        <div id="more-options-modal" class="hidden">
-            <div id="more-options-grid">
-                <button onclick="showScreenAndCloseModal('events')" class="btn-game bg-orange-700"><i class="fas fa-calendar-alt"></i> Eventos</button>
-                <button onclick="showScreenAndCloseModal('achievements')" class="btn-game bg-yellow-600"><i class="fas fa-trophy"></i> Conquistas</button>
-                <button onclick="showScreenAndCloseModal('bosses')" class="btn-game bg-red-900"><i class="fas fa-crown"></i> Chefes</button>
-                <button onclick="showScreenAndCloseModal('leaderboard')" class="btn-game bg-teal-700"><i class="fas fa-trophy"></i> Ranking</button>
-                <button onclick="showScreenAndCloseModal('gang')" class="btn-game bg-indigo-700"><i class="fas fa-users"></i> Gangue</button>
-                <button onclick="showScreenAndCloseModal('admin')" class="btn-game bg-gray-600"><i class="fas fa-user-shield"></i> Admin</button>
+
+            <div id="screen-main" class="screen active p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel Principal</h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 text-center">
+                        <img id="player-avatar" src="" alt="Personagem" class="rounded-lg shadow-lg border-2 border-gray-600 mx-auto mb-4 w-full max-w-xs object-cover aspect-square">
+                        <div class="flex flex-col gap-2">
+                             <p class="text-lg">Escolha seu Avatar:</p>
+                             <div class="flex gap-2 justify-center">
+                                 <button onclick="setAvatar('male')" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Masculino</button>
+                                 <button onclick="setAvatar('female')" class="btn-game bg-pink-700 w-full p-2 rounded-md font-bold">Feminino</button>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-2xl font-bold text-yellow-300">Atributos</h3>
+                        <p class="mb-2">Pontos para distribuir: <span id="skill-points" class="font-bold text-2xl text-green-400">0</span></p>
+                        <div class="flex justify-center gap-2 mb-4">
+                            <button onclick="setDistributionAmount(1)" class="dist-btn active p-2 rounded-md font-bold" data-amount="1">x1</button>
+                            <button onclick="setDistributionAmount(10)" class="dist-btn p-2 rounded-md font-bold" data-amount="10">x10</button>
+                            <button onclick="setDistributionAmount(100)" class="dist-btn p-2 rounded-md font-bold" data-amount="100">x100</button>
+                            <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
+                        </div>
+                        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
+                                  <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                      <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
+                                      <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
+                                      <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                  </div>
+                                  <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                      <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
+                                      <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
+                                      <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                  </div>
+                                  <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                      <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
+                                      <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
+                                      <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                  </div>
+                                  <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
+                                      <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
+                                      <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
+                                      <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
+                                  </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
+                        <p id="mission-status" class="text-lg my-2">Nenhuma missão ativa.</p>
+                    </div>
+                </div>
             </div>
-            <button onclick="closeMoreOptionsModal()" class="mt-8 btn-game bg-gray-800 text-2xl px-8 py-2">Fechar</button>
-        </div>
 
-        <div id="game-modal" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 hidden">
-             <div class="bg-gray-800 p-6 rounded-lg border-2 border-gray-600 max-w-sm w-full text-center">
-                 <h2 id="modal-title" class="text-3xl font-bold mb-4 text-yellow-300"></h2>
-                 <div id="modal-body" class="text-lg mb-6"></div>
-                 <div id="modal-buttons">
-                     <button id="modal-close-btn" onclick="closeModal()" class="btn-game bg-gray-600 px-6 py-2 rounded-md font-bold uppercase">Fechar</button>
+            <div id="screen-missions" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                 <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                      <h2 class="text-3xl font-bold">Quadro de Missões</h2>
+                      <div id="missions-refresh-container" class="text-right">
+                          </div>
                  </div>
-             </div>
+                 <div id="offline-patrol-section" class="bg-gray-900 p-4 rounded-lg border-2 border-cyan-700 mb-6 text-center"></div>
+                 <div id="missions-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            
+            <div id="screen-events" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Eventos Ativos</h2>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="showEventCategory('new-server')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="new-server"><i class="fas fa-server"></i> Novo Servidor</button>
+                    </div>
+                <div id="event-new-server" class="event-category active">
+                    </div>
+            </div>
+
+             <div id="screen-gang" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                 <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Território da Gangue</h2>
+                 <div id="gang-content" class="text-center">
+                     </div>
+            </div>
+
+            <div id="screen-leaderboard" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Líderes</h2>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button onclick="renderLeaderboard('level')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="level"><i class="fas fa-star"></i> Mais Poderosos</button>
+                    <button onclick="renderLeaderboard('totalMoneyEarned')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="totalMoneyEarned"><i class="fas fa-dollar-sign"></i> Mais Ricos</button>
+                    <button onclick="renderLeaderboard('gangs')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gangs"><i class="fas fa-users"></i> Gangues Mais Ricas</button>
+                </div>
+                <div id="leaderboard-list" class="space-y-2">
+                    </div>
+            </div>
+
+            <div id="screen-achievements" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Quadro de Conquistas</h2><div id="achievements-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+            <div id="screen-inventory" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Inventário e Refinamento</h2>
+                <div class="text-center mb-6 bg-gray-800 p-3 rounded-md">
+                    <p class="text-xl">Pedras de Refinamento: <span id="refinement-stones" class="font-bold text-2xl text-cyan-400">0</span></p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2">Arma Equipada</h3>
+                        <div id="equipped-weapon-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armas</h3>
+                        <div id="inventory-weapons-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2">Armadura Equipada</h3>
+                        <div id="equipped-armor-card" class="bg-gray-800 p-4 rounded-lg border-2 border-yellow-400 flex flex-col gap-4 mb-4"></div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-2 mt-4">Outras Armaduras</h3>
+                        <div id="inventory-armors-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+             <div id="screen-enemies" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                 <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                      <h2 class="text-3xl font-bold">Escolha seu Alvo</h2>
+                      <div id="enemies-refresh-container" class="text-right">
+                          </div>
+                 </div>
+                 <div id="enemies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div id="screen-bosses" class="screen p-4 bg-black bg-opacity-20 rounded-lg"><h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Covil dos Chefes</h2><div id="bosses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+
+            <div id="screen-shop" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                    <h2 class="text-3xl font-bold">Mercado Negro</h2>
+                    <div id="shop-refresh-container" class="text-right">
+                        </div>
+                </div>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="showShopCategory('weapons')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase active" data-category="weapons"><i class="fas fa-gun"></i> Armas</button>
+                    <button onclick="showShopCategory('armors')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="armors"><i class="fas fa-shield-alt"></i> Armaduras</button>
+                    <button onclick="showShopCategory('potions')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-xl uppercase" data-category="potions"><i class="fas fa-flask"></i> Poções</button>
+                </div>
+                <div id="shop-weapons" class="shop-category active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                <div id="shop-armors" class="shop-category grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                <div id="shop-potions" class="shop-category grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            </div>
+
+              <div id="screen-battle" class="screen p-4 bg-black bg-opacity-20 rounded-lg relative overflow-hidden"><h2 class="text-3xl font-bold mb-2 text-center text-red-500 uppercase">Combate!</h2><div class="flex flex-col md:flex-row justify-around items-center md:items-start text-center"><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-player-name" class="text-3xl font-bold text-yellow-400"></h3><img id="battle-player-img" src="" alt="Jogador" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-yellow-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-player-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-player-hp-text" class="text-lg mt-1"></p></div><div class="w-full md:w-1/2 p-4 relative max-w-md"><h3 id="battle-enemy-name" class="text-3xl font-bold text-red-400"></h3><img id="battle-enemy-img" src="" alt="Inimigo" class="h-48 md:h-64 mx-auto my-4 rounded-lg border-2 border-red-400 object-cover"><div class="w-full bg-gray-700 rounded-full h-6 border border-gray-500"><div id="battle-enemy-hp-bar" class="hp-bar h-full rounded-full text-center text-white font-bold"></div></div><p id="battle-enemy-hp-text" class="text-lg mt-1"></p></div></div><div id="battle-controls" class="text-center"><button id="skip-battle-btn" onclick="skipBattle()" class="btn-game bg-gray-600 text-white font-bold py-2 px-6 text-xl rounded-lg uppercase">Pular Batalha <i class="fas fa-forward"></i></button></div><div id="battle-log" class="mt-4 p-2 bg-black bg-opacity-50 rounded h-32 overflow-y-auto text-center text-lg"></div></div>
+            
+            <div id="screen-admin" class="screen p-4 bg-black bg-opacity-20 rounded-lg">
+                <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel de Administração</h2>
+                
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button onclick="showAdminCreator('item-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase active" data-category="item-creator">Criar Itens</button>
+                    <button onclick="showAdminCreator('enemy-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="enemy-creator">Criar Inimigos</button>
+                    <button onclick="showAdminCreator('mission-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="mission-creator">Criar Missões</button>
+                    <button onclick="showAdminCreator('achievement-creator')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="achievement-creator">Criar Conquistas</button>
+                    <button onclick="showAdminCreator('player-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="player-manager">Jogadores</button>
+                    <button onclick="showAdminCreator('gang-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="gang-manager">Gangues</button>
+                    <button onclick="showAdminCreator('event-manager')" class="tab-btn flex-1 p-3 rounded-t-lg font-bold text-lg uppercase" data-category="event-manager">Eventos</button>
+                </div>
+
+                <div id="admin-item-creator" class="admin-creator active">
+                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Itens</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-wrap gap-4 items-center mb-4">
+                            <div class="flex flex-col">
+                                <label for="admin-create-type">Tipo de Item</label>
+                                <select id="admin-create-type" onchange="toggleAdminCreatorUI()"></select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="flex flex-col"><label>Nome</label><input id="admin-create-name" type="text" placeholder="Nome do Item"></div>
+                            <div class="flex flex-col"><label>Preço Base (Nvl 1)</label><input id="admin-create-price" type="number" value="100"></div>
+                            <div class="flex flex-col"><label>URL da Imagem</label><input id="admin-create-image" type="text" placeholder="https://..."></div>
+                        </div>
+                        <div id="admin-creator-weapon-fields">
+                            <h4 class="text-xl font-bold mb-2">Atributos da Arma</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex flex-col"><label>Dano Base (Nvl 1)</label><input id="admin-create-baseDamage" type="number" value="10"></div>
+                            </div>
+                        </div>
+                        <div id="admin-creator-armor-fields" class="hidden">
+                            <h4 class="text-xl font-bold mb-2">Atributos da Armadura</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <div class="flex flex-col"><label>Defesa</label><input id="admin-create-stat-defense" type="number" value="5"></div>
+                                <div class="flex flex-col"><label>HP Bônus</label><input id="admin-create-stat-hp" type="number" value="20"></div>
+                                <div class="flex flex-col"><label>Sorte</label><input id="admin-create-stat-luck" type="number" value="0"></div>
+                                <div class="flex flex-col"><label>Agilidade</label><input id="admin-create-stat-agility" type="number" value="0"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Habilidade Passiva (Opcional)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <div class="flex flex-col">
+                                    <label>Tipo</label>
+                                    <select id="admin-create-ability-type">
+                                        <option value="">Nenhuma</option>
+                                        <option value="lifesteal">Roubo de Vida</option>
+                                        <option value="invincibility">Invencibilidade</option>
+                                        <option value="stun">Atordoar</option>
+                                        <option value="armorBreak">Quebrar Armadura</option>
+                                        <option value="damageReflection">Refletir Dano</option>
+                                        <option value="lastStand">Último Suspiro</option>
+                                        <option value="poison">Veneno</option>
+                                        <option value="berserk">Frenesi</option>
+                                        <option value="regeneration">Regeneração</option>
+                                        <option value="execute">Executar</option>
+                                        <option value="goldDigger">Mercenário</option>
+                                        <option value="thorns">Espinhos</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col"><label>Chance (%) / Limiar HP (%)</label><input id="admin-create-ability-chance" type="number" value="25"></div>
+                                <div class="flex flex-col"><label>Valor / Dano / Multiplicador</label><input id="admin-create-ability-value" type="number" value="0.5"></div>
+                                <div class="flex flex-col"><label>Duração (turnos)</label><input id="admin-create-ability-duration" type="number" value="3"></div>
+                                <div class="col-span-full"><label>Descrição</label><input id="admin-create-ability-desc" type="text" placeholder="Descrição da habilidade"></div>
+                            </div>
+                        </div>
+                        <button onclick="adminCreateItem()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar e Adicionar ao JSON</button>
+                    </div>
+                </div>
+                
+                <div id="admin-enemy-creator" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Inimigos/Chefes</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="flex flex-col"><label>Nome</label><input id="admin-create-enemy-name" type="text" placeholder="Nome do Inimigo"></div>
+                        <div class="flex flex-col"><label>HP</label><input id="admin-create-enemy-hp" type="number" value="100"></div>
+                        <div class="flex flex-col"><label>Ataque</label><input id="admin-create-enemy-attack" type="number" value="10"></div>
+                        <div class="flex flex-col"><label>Defesa</label><input id="admin-create-enemy-defense" type="number" value="5"></div>
+                        <div class="flex flex-col"><label>XP</label><input id="admin-create-enemy-xp" type="number" value="50"></div>
+                        <div class="flex flex-col"><label>Dinheiro</label><input id="admin-create-enemy-money" type="number" value="100"></div>
+                        <div class="flex flex-col col-span-2"><label>URL da Imagem</label><input id="admin-create-enemy-image" type="text" placeholder="https://..."></div>
+                        <div class="flex items-center gap-2"><label for="admin-create-enemy-isBoss">É um Chefe?</label><input id="admin-create-enemy-isBoss" type="checkbox"></div>
+                        <div class="col-span-full"><button onclick="adminCreateEnemy()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Inimigo/Chefe</button></div>
+                    </div>
+                </div>
+                
+                <div id="admin-mission-creator" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Missões</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex flex-col"><label>Título</label><input id="admin-create-mission-title" type="text" placeholder="Título da Missão"></div>
+                        <div class="flex flex-col"><label>Alvo</label><select id="admin-create-mission-enemyId"></select></div>
+                        <div class="flex flex-col"><label>Quantidade</label><input id="admin-create-mission-count" type="number" value="5"></div>
+                        <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-mission-xp" type="number" value="100"></div>
+                        <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-mission-money" type="number" value="200"></div>
+                        <div class="col-span-full"><button onclick="adminCreateMission()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Missão</button></div>
+                    </div>
+                </div>
+
+                <div id="admin-achievement-creator" class="admin-creator">
+                     <h3 class="text-2xl font-bold mb-2 text-yellow-300">Criador de Conquistas</h3>
+                     <div class="bg-gray-800 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div class="flex flex-col"><label>Nome</label><input id="admin-create-ach-name" type="text" placeholder="Nome da Conquista"></div>
+                          <div class="flex flex-col"><label>Descrição</label><input id="admin-create-ach-desc" type="text" placeholder="Descrição"></div>
+                          <div class="flex flex-col"><label>Ícone (Font Awesome)</label><input id="admin-create-ach-icon" type="text" value="fa-star"></div>
+                          <div class="flex flex-col"><label>Tipo de Objetivo</label><select id="admin-create-ach-goal-type"></select></div>
+                          <div class="flex flex-col"><label>Estatística</label><select id="admin-create-ach-goal-stat"></select></div>
+                          <div class="flex flex-col"><label>Valor do Objetivo</label><input id="admin-create-ach-goal-value" type="number" value="100"></div>
+                          <div class="flex flex-col"><label>Recompensa (XP)</label><input id="admin-create-ach-reward-xp" type="number" value="100"></div>
+                          <div class="flex flex-col"><label>Recompensa (Dinheiro)</label><input id="admin-create-ach-reward-money" type="number" value="500"></div>
+                           <div class="flex flex-col"><label>Recompensa (Pedras)</label><input id="admin-create-ach-reward-stones" type="number" value="0"></div>
+                           <div class="flex flex-col"><label>Recompensa (Pontos)</label><input id="admin-create-ach-reward-sp" type="number" value="0"></div>
+                          <div class="col-span-full"><button onclick="adminCreateAchievement()" class="btn-game bg-blue-700 px-4 py-2 rounded-md">Criar Conquista</button></div>
+                    </div>
+                </div>
+
+                <div id="admin-player-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Jogadores</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col mb-4">
+                            <label for="admin-player-select">Selecionar Jogador</label>
+                            <select id="admin-player-select" onchange="adminLoadPlayerData(this.value)">
+                                <option value="">-- Carregando jogadores... --</option>
+                            </select>
+                        </div>
+
+                        <div id="admin-player-edit-form" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="hidden" id="admin-selected-player-id">
+                            <div class="flex flex-col"><label>Nome</label><input id="admin-edit-player-name" type="text" readonly class="bg-gray-700"></div>
+                            <div class="flex flex-col"><label>Dinheiro</label><input id="admin-edit-player-money" type="number"></div>
+                            <div class="flex flex-col"><label>Ouro</label><input id="admin-edit-player-gold" type="number"></div>
+                            <div class="flex flex-col"><label>XP</label><input id="admin-edit-player-xp" type="number"></div>
+                            <div class="flex flex-col"><label>Nível</label><input id="admin-edit-player-level" type="number"></div>
+                            <div class="flex flex-col"><label>Pontos de Skill</label><input id="admin-edit-player-skillPoints" type="number"></div>
+                            <div class="flex flex-col"><label>Ataque Base</label><input id="admin-edit-player-baseAttack" type="number"></div>
+                            <div class="flex flex-col"><label>Defesa</label><input id="admin-edit-player-defense" type="number"></div>
+                            <div class="flex flex-col"><label>Sorte</label><input id="admin-edit-player-luck" type="number"></div>
+                            <div class="flex flex-col"><label>Agilidade</label><input id="admin-edit-player-agility" type="number"></div>
+                            <div class="col-span-full mt-4 flex flex-wrap gap-4">
+                                <button onclick="adminSaveChangesToPlayer()" class="btn-game bg-green-700 px-4 py-2 rounded-md">Salvar Alterações</button>
+                                <button onclick="adminResetPlayer()" class="btn-game bg-yellow-700 px-4 py-2 rounded-md" style="border-bottom-color: #b7791f;">Resetar Personagem</button>
+                                <button onclick="adminDeletePlayer()" class="btn-game bg-red-800 px-4 py-2 rounded-md" style="border-bottom-color: #742a2a;">Excluir Personagem</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-gang-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Gangues</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col mb-4">
+                            <label for="admin-gang-select">Selecionar Gangue</label>
+                            <select id="admin-gang-select">
+                                <option value="">-- Carregando gangues... --</option>
+                            </select>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="adminDeleteGang()" class="btn-game bg-red-800 px-4 py-2 rounded-md" style="border-bottom-color: #742a2a;">Excluir Gangue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-event-manager" class="admin-creator">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Gerenciador de Eventos Globais</h3>
+                    
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <h4 class="text-xl font-bold text-cyan-400 mb-2">Evento de Novo Servidor</h4>
+                        <div class="flex flex-wrap gap-4 items-center mb-6">
+                            <div class="flex items-center gap-2">
+                                <label for="admin-event-newServer-active" class="text-lg">Ativar Evento</label>
+                                <input id="admin-event-newServer-active" type="checkbox" class="w-6 h-6">
+                            </div>
+                            <div class="flex flex-col">
+                                <label for="admin-event-newServer-endTime">Data de Término</label>
+                                <input id="admin-event-newServer-endTime" type="datetime-local">
+                            </div>
+                        </div>
+                        
+                        <h4 class="text-xl font-bold text-cyan-400 mb-2 mt-4 border-t border-gray-600 pt-4">Recompensas do Evento</h4>
+                        <div id="admin-new-server-rewards-list" class="space-y-2 mb-4">
+                            </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <h5 class="text-lg font-bold mb-2">Adicionar Nova Recompensa</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                <div class="flex flex-col"><label>Descrição</label><input id="admin-nsr-desc" type="text" placeholder="Ex: Alcance Nível 10"></div>
+                                <div class="flex flex-col"><label>Tipo de Objetivo</label><select id="admin-nsr-type"></select></div>
+                                <div class="flex flex-col" id="admin-nsr-stat-wrapper"><label>Estatística</label><select id="admin-nsr-stat"></select></div>
+                                <div class="flex flex-col"><label>Valor do Objetivo</label><input id="admin-nsr-goal" type="number" value="10"></div>
+                                <div class="flex flex-col"><label>Tipo de Item</label><select id="admin-nsr-item-type"></select></div>
+                                <div class="flex flex-col"><label>Item de Recompensa</label><select id="admin-nsr-item-id"></select></div>
+                                <div class="flex flex-col"><label>Raridade do Item</label><select id="admin-nsr-item-rarity"></select></div>
+                                <button onclick="adminAddNewServerReward()" class="btn-game bg-blue-700 h-12 rounded-md">Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <h4 class="text-xl font-bold text-cyan-400 mb-2">Evento de XP em Dobro</h4>
+                        <div class="flex items-center gap-2">
+                            <label for="admin-event-doubleXp" class="text-lg">Ativar Evento</label>
+                            <input id="admin-event-doubleXp" type="checkbox" class="w-6 h-6">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button onclick="adminSaveAllEventChanges()" class="btn-game bg-orange-700 px-4 py-2 rounded-md">Salvar Alterações nos Eventos</button>
+                    </div>
+                </div>
+
+                <div class="mb-8 mt-8">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Editor de Dados (JSON)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Itens</h4>
+                            <textarea id="admin-items" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Jogabilidade</h4>
+                            <textarea id="admin-gameplay" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Eventos</h4>
+                            <textarea id="admin-events" rows="10" class="w-full p-2 rounded"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="saveAdminData()" class="btn-game bg-green-700 px-4 py-2 rounded-md"><i class="fas fa-save"></i> Salvar Dados</button>
+                        <button onclick="loadAdminData(true)" class="btn-game bg-blue-700 px-4 py-2 rounded-md"><i class="fas fa-sync"></i> Recarregar Dados</button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Adicionar Itens ao Inventário</h3>
+                    <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                        <div class="flex flex-col">
+                            <label>Tipo</label>
+                            <select id="admin-item-type" onchange="updateAdminItemSelector()"></select>
+                        </div>
+                        <div class="flex flex-col">
+                            <label>Item</label>
+                            <select id="admin-item-select"></select>
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Quantidade</label>
+                            <input id="admin-item-quantity" type="number" value="1" min="1" class="w-24">
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Raridade</label>
+                            <select id="admin-item-rarity"></select>
+                        </div>
+                        <button onclick="adminAddItem()" class="btn-game bg-purple-700 px-4 py-2 rounded-md self-end">Adicionar</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-2 text-yellow-300">Controles do Jogo</h3>
+                     <div class="flex flex-wrap gap-4 items-end bg-gray-800 p-4 rounded-lg">
+                         <div class="flex flex-col">
+                            <label>XP</label>
+                            <input id="admin-add-xp" type="number" value="100" min="0" class="w-32">
+                        </div>
+                        <div class="flex flex-col">
+                            <label>Dinheiro</label>
+                            <input id="admin-add-money" type="number" value="500" min="0" class="w-32">
+                        </div>
+                         <div class="flex flex-col">
+                            <label>Ouro</label>
+                            <input id="admin-add-gold" type="number" value="10" min="0" class="w-32">
+                        </div>
+                        <button onclick="adminAddResources()" class="btn-game bg-green-700 px-4 py-2 rounded-md self-end">Adicionar Recursos</button>
+                        <button onclick="adminResetBossCooldowns()" class="btn-game bg-red-800 px-4 py-2 rounded-md self-end">Resetar Cooldowns dos Chefes</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <div id="game-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 id="modal-title" class="text-3xl font-bold mb-4 text-yellow-300"></h2>
+                <div id="modal-body" class="text-lg mb-6"></div>
+                <div id="modal-buttons">
+                    <button id="modal-close-btn" class="btn-game bg-gray-600 px-6 py-2 rounded-md font-bold uppercase">Fechar</button>
+                </div>
+            </div>
         </div>
 
-        <div id="toast" class="hidden fixed bottom-20 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
-
+        <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
     </div>
 
     <script>
-    // --- LÓGICA DE LAYOUT E NAVEGAÇÃO ---
-    function applyLayout() {
-        const isMobile = window.innerWidth < 768;
-        if (isMobile) {
-            document.body.classList.add('is-mobile');
-            document.body.classList.remove('is-desktop');
-        } else {
-            document.body.classList.add('is-desktop');
-            document.body.classList.remove('is-mobile');
-        }
-        const activeScreen = document.querySelector('.screen.active')?.id.replace('screen-', '') || 'main';
-        showScreen(activeScreen, true); 
-    }
-
-    function showMoreOptionsModal() {
-        document.getElementById('more-options-modal').classList.remove('hidden');
-    }
-
-    function closeMoreOptionsModal() {
-        document.getElementById('more-options-modal').classList.add('hidden');
-    }
-
-    function showScreenAndCloseModal(screenId) {
-        showScreen(screenId);
-        closeMoreOptionsModal();
-    }
-    
-    // --- CÓDIGO DO JOGO ---
+    // --- CONSTANTES DE JOGO ---
     const PATROL_MONEY_PER_MINUTE = 10;
     const PATROL_XP_PER_MINUTE = 5;
     const PATROL_STONES_PER_HOUR_CHANCE = 50;
@@ -252,13 +642,14 @@
         female: 'https://i.ibb.co/Jjdh2yGY/Gemini-Generated-Image-wvusn8wvusn8wvus.png'
     };
     const RARITY_TIERS = {
-        COMUM:    { multiplier: 1.0, className: 'rarity-COMUM', dropChance: 60 },
-        RARO:     { multiplier: 1.2, className: 'rarity-RARO', dropChance: 25 },
-        EPICO:    { multiplier: 1.5, className: 'rarity-EPICO', dropChance: 10 },
-        LENDARIO: { multiplier: 2.0, className: 'rarity-LENDARIO', dropChance: 4 },
-        BLACKOUT: { multiplier: 2.5, className: 'rarity-BLACKOUT', dropChance: 1 }
+        COMUM:     { multiplier: 1.0, className: 'rarity-COMUM', dropChance: 60 },
+        RARO:      { multiplier: 1.2, className: 'rarity-RARO', dropChance: 25 },
+        EPICO:     { multiplier: 1.5, className: 'rarity-EPICO', dropChance: 10 },
+        LENDARIO:  { multiplier: 2.0, className: 'rarity-LENDARIO', dropChance: 4 },
+        BLACKOUT:  { multiplier: 2.5, className: 'rarity-BLACKOUT', dropChance: 1 }
     };
 
+    // --- ESTADO INICIAL DO JOGO ---
     let player = {};
 
     function getInitialPlayerState() {
@@ -287,6 +678,7 @@
         };
     }
 
+    // --- DADOS DO JOGO ---
     let weapons = [];
     let armors = [];
     let potions = [];
@@ -312,25 +704,27 @@
     let gameEvents = {}; 
     let currentShopStock = null;
 
+    // Firebase
     let db, auth, userId;
     let gangUnsubscribe = null;
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
+    // Auto-Save
     let autoSaveTimeout = null;
     let isSaving = false;
 
+
+    // --- GERENCIADOR DE SOM ---
     const soundManager = {
         isMuted: false, synths: {},
         init() {
-            try {
-                this.synths.attack = new Tone.Synth({ oscillator: { type: "fmsine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 } }).toDestination();
-                this.synths.hit = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
-                this.synths.crit = new Tone.Synth({ oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
-                this.synths.levelUp = new Tone.PolySynth(Tone.Synth).toDestination();
-                this.synths.buy = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
-                this.synths.refineSuccess = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
-                this.synths.refineFail = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } }).toDestination();
-            } catch(e) { console.error("Error initializing Tone.js:", e)}
+            this.synths.attack = new Tone.Synth({ oscillator: { type: "fmsine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.hit = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+            this.synths.crit = new Tone.Synth({ oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            this.synths.levelUp = new Tone.PolySynth(Tone.Synth).toDestination();
+            this.synths.buy = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.refineSuccess = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+            this.synths.refineFail = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } }).toDestination();
         },
         play(sound) {
             if (this.isMuted || !this.synths[sound]) return;
@@ -349,76 +743,52 @@
         }
     };
 
-    function showScreen(screenId, isResize = false) {
-        if (isBattleInProgress && screenId !== 'battle') return;
-        
-        if (!isResize) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const screenElement = document.getElementById(`screen-${screenId}`);
-            if (screenElement) screenElement.classList.add('active');
-        }
-        
-        const isMobile = document.body.classList.contains('is-mobile');
-        const header = document.querySelector('header');
-        const gameContent = document.getElementById('game-content');
-        const desktopNav = document.getElementById('main-nav-desktop');
-        const mobileNav = document.getElementById('main-nav-mobile');
-        
-        if (screenId === 'battle') {
-            if (header) header.style.display = 'none';
-            if (desktopNav) desktopNav.style.display = 'none';
-            if (mobileNav) mobileNav.style.display = 'none';
-            if (gameContent) gameContent.style.paddingBottom = '0'; 
-        } else {
-            if (header) header.style.display = 'block';
-            if (isMobile) {
-                if (desktopNav) desktopNav.style.display = 'none';
-                if (mobileNav) mobileNav.style.display = 'flex';
-                if (gameContent) gameContent.style.paddingBottom = '70px';
-            } else {
-                if (desktopNav) desktopNav.style.display = 'grid';
-                if (mobileNav) mobileNav.style.display = 'none';
-                if (gameContent) gameContent.style.paddingBottom = '0';
-            }
-        }
-        
-        document.querySelectorAll('#main-nav-desktop .btn-game, #main-nav-mobile .btn-game').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.screen === screenId) {
-                btn.classList.add('active');
-            }
-        });
-        
-        if (patrolIntervalId) { clearInterval(patrolIntervalId); patrolIntervalId = null; }
-        if (eventTimerIntervalId) { clearInterval(eventTimerIntervalId); eventTimerIntervalId = null; }
 
-        // Somente chama a função de renderização se não for um redimensionamento
-        if (!isResize) {
-            if (screenId === 'inventory') renderInventory();
-            if (screenId === 'admin') {  
-                populateAdminSelectors(); 
-                showAdminCreator('item-creator'); 
-                loadAdminEventStatus(); 
-                adminRenderPlayerManager();
-                adminRenderGangManager();
-                renderAdminNewServerRewardsEditor();
-            }
-            if (screenId === 'events') renderEventsScreen();
-            if (screenId === 'bosses') renderBosses();
-            if (screenId === 'achievements') renderAchievements();
-            if (screenId === 'gang') renderGangScreen();
-            if (screenId === 'leaderboard') renderLeaderboard('level');
-            if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons('enemies'); }
-            if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons('shop'); }
-            if (screenId === 'missions') { renderMissions(); renderRefreshButtons('missions'); }
+    // --- FUNÇÕES DE UI E NAVEGAÇÃO ---
+    function showScreen(screenId) {
+        if (isBattleInProgress && screenId !== 'battle') return;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const screenElement = document.getElementById(`screen-${screenId}`);
+        if (screenElement) screenElement.classList.add('active');
+        
+        const mainNav = document.getElementById('main-nav');
+        if(mainNav) mainNav.style.display = (screenId === 'battle') ? 'none' : 'grid';
+
+        if (patrolIntervalId) {
+            clearInterval(patrolIntervalId);
+            patrolIntervalId = null;
         }
+        
+        if (eventTimerIntervalId) {
+            clearInterval(eventTimerIntervalId);
+            eventTimerIntervalId = null;
+        }
+
+        if (screenId === 'inventory') renderInventory();
+        if (screenId === 'admin') { 
+            populateAdminSelectors(); 
+            showAdminCreator('item-creator'); 
+            loadAdminEventStatus(); 
+            adminRenderPlayerManager();
+            adminRenderGangManager();
+            renderAdminNewServerRewardsEditor();
+        }
+        if (screenId === 'events') renderEventsScreen();
+        if (screenId === 'bosses') renderBosses();
+        if (screenId === 'achievements') renderAchievements();
+        if (screenId === 'gang') renderGangScreen();
+        if (screenId === 'leaderboard') renderLeaderboard('level');
+
+        if (screenId === 'enemies') { renderEnemies(); renderRefreshButtons('enemies'); }
+        if (screenId === 'shop') { generateShopStock(); renderShop(); renderRefreshButtons('shop'); }
+        if (screenId === 'missions') { renderMissions(); renderRefreshButtons('missions'); }
     }
 
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         if (!toast) return;
         toast.textContent = message;
-        toast.className = `fixed bottom-20 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
         toast.style.display = 'block';
         setTimeout(() => { toast.style.display = 'none' }, 3000);
     }
@@ -457,6 +827,7 @@
         document.getElementById('game-modal').classList.add('hidden');
     }
 
+
     function setAvatar(gender) {
         if (AVATARS[gender]) {
             player.avatar = AVATARS[gender];
@@ -467,11 +838,18 @@
     }
 
     function showShopCategory(category) {
-        document.querySelectorAll('.shop-category').forEach(el => el.style.display = 'none');
+        // Primeiro, esconde todas as divs de categoria da loja
+        document.getElementById('shop-weapons').style.display = 'none';
+        document.getElementById('shop-armors').style.display = 'none';
+        document.getElementById('shop-potions').style.display = 'none';
+    
+        // Depois, mostra apenas a div da categoria clicada, forçando o display para 'grid'
         document.getElementById(`shop-${category}`).style.display = 'grid';
+    
+        // Por fim, atualiza o estilo do botão da aba que foi clicada
         document.querySelectorAll('#screen-shop .tab-btn').forEach(el => el.classList.remove('active'));
         document.querySelector(`#screen-shop .tab-btn[data-category="${category}"]`).classList.add('active');
-    }   
+    }    
     function showEventCategory(category) {
         document.querySelectorAll('.event-category').forEach(el => el.classList.remove('active'));
         document.getElementById(`event-${category}`).classList.add('active');
@@ -3286,29 +3664,28 @@
         }
     }
 
-    // Apenas para garantir, a última função é a de inicialização
+    // --- INICIALIZAÇÃO ---
     async function initFirebase() {
         try {
-            const firebaseConfigJSON = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            if (!firebaseConfigJSON) {
-                 const hardcodedConfig = {
-                    apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
-                    authDomain: "new-gangstar-online.firebaseapp.com",
-                    projectId: "new-gangstar-online",
-                    storageBucket: "new-gangstar-online.appspot.com",
-                    messagingSenderId: "126343704437",
-                    appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
-                 };
-                 console.warn("Firebase config not provided, using hardcoded fallback.");
-                 const app = window.firebase.initializeApp(hardcodedConfig);
-                 db = window.firebase.getFirestore(app);
-                 auth = window.firebase.getAuth(app);
-            } else {
-                const firebaseConfig = JSON.parse(firebaseConfigJSON);
-                const app = window.firebase.initializeApp(firebaseConfig);
-                db = window.firebase.getFirestore(app);
-                auth = window.firebase.getAuth(app);
+            const firebaseConfig = {
+                apiKey: "AIzaSyAGisXiw-6zVm1qI_H4KOy1pJ5a-nvQdjs",
+                authDomain: "new-gangstar-online.firebaseapp.com",
+                projectId: "new-gangstar-online",
+                storageBucket: "new-gangstar-online.appspot.com",
+                messagingSenderId: "126343704437",
+                appId: "1:126343704437:web:487efccdc2f78cdf86ed3c"
+            };
+
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI") {
+                 console.error("Firebase config não encontrada ou inválida.");
+                 showToast("Configuração do Firebase ausente. Funções online desativadas.", "error");
+                 document.getElementById('gang-content').innerHTML = '<p class="text-red-500">Erro de Configuração.</p>';
+                 return null;
             }
+            
+            const app = window.firebase.initializeApp(firebaseConfig);
+            db = window.firebase.getFirestore(app);
+            auth = window.firebase.getAuth(app);
 
             return new Promise((resolve) => {
                 const unsubscribe = window.firebase.onAuthStateChanged(auth, (user) => {
@@ -3321,10 +3698,11 @@
 
                 (async () => {
                     try {
-                        if (auth.currentUser) { resolve(auth.currentUser.uid); return; }
-                        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (initialToken) {
-                            await window.firebase.signInWithCustomToken(auth, initialToken);
+                        if (auth.currentUser) {
+                           return; 
+                        }
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await window.firebase.signInWithCustomToken(auth, __initial_auth_token);
                         } else {
                             await window.firebase.signInAnonymously(auth);
                         }
@@ -3343,67 +3721,45 @@
         }
     }
 
-    window.onload = async function() {
-        // --- INICIALIZAÇÃO E CARREGAMENTO DE CONTEÚDO HTML ---
-        // Adiciona o conteúdo HTML inicial às telas vazias
-        document.getElementById('screen-main').innerHTML = `
-            <h2 class="text-3xl font-bold mb-4 border-b border-gray-600 pb-2">Painel Principal</h2>
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="md:w-1/3 text-center">
-                    <img id="player-avatar" src="" alt="Personagem" class="rounded-lg shadow-lg border-2 border-gray-600 mx-auto mb-4 w-full max-w-xs object-cover aspect-square">
-                    <div class="flex flex-col gap-2">
-                         <p class="text-lg">Escolha seu Avatar:</p>
-                         <div class="flex gap-2 justify-center">
-                             <button onclick="setAvatar('male')" class="btn-game bg-blue-700 w-full p-2 rounded-md font-bold">Masculino</button>
-                             <button onclick="setAvatar('female')" class="btn-game bg-pink-700 w-full p-2 rounded-md font-bold">Feminino</button>
-                         </div>
-                    </div>
-                </div>
-                <div class="md:w-2/3">
-                    <h3 class="text-2xl font-bold text-yellow-300">Atributos</h3>
-                    <p class="mb-2">Pontos para distribuir: <span id="skill-points" class="font-bold text-2xl text-green-400">0</span></p>
-                    <div class="flex justify-center gap-2 mb-4">
-                        <button onclick="setDistributionAmount(1)" class="dist-btn active p-2 rounded-md font-bold" data-amount="1">x1</button>
-                        <button onclick="setDistributionAmount(10)" class="dist-btn p-2 rounded-md font-bold" data-amount="10">x10</button>
-                        <button onclick="setDistributionAmount(100)" class="dist-btn p-2 rounded-md font-bold" data-amount="100">x100</button>
-                        <button onclick="setDistributionAmount('MAX')" class="dist-btn p-2 rounded-md font-bold" data-amount="MAX">MAX</button>
-                    </div>
-                    <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xl">
-                            <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                <span><i class="fas fa-fist-raised text-red-400"></i> Ataque: <strong id="stat-attack">0</strong></span>
-                                <button onclick="spendPoint('baseAttack')" class="btn-stat bg-red-600 hover:bg-red-500 rounded-full w-8 h-8 font-bold">+</button>
-                                <div id="tooltip-attack" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                            </div>
-                            <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                <span><i class="fas fa-shield-halved text-blue-400"></i> Defesa: <strong id="stat-defense">0</strong></span>
-                                <button onclick="spendPoint('defense')" class="btn-stat bg-blue-600 hover:bg-blue-500 rounded-full w-8 h-8 font-bold">+</button>
-                                <div id="tooltip-defense" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                            </div>
-                            <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                <span><i class="fas fa-clover text-green-400"></i> Sorte: <strong id="stat-luck">0</strong></span>
-                                <button onclick="spendPoint('luck')" class="btn-stat bg-green-600 hover:bg-green-500 rounded-full w-8 h-8 font-bold">+</button>
-                                <div id="tooltip-luck" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                            </div>
-                            <div class="relative group bg-gray-800 p-3 rounded-md flex justify-between items-center">
-                                <span><i class="fas fa-feather-alt text-yellow-400"></i> Agilidade: <strong id="stat-agility">0</strong></span>
-                                <button onclick="spendPoint('agility')" class="btn-stat bg-yellow-600 hover:bg-yellow-500 rounded-full w-8 h-8 font-bold">+</button>
-                                <div id="tooltip-agility" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-sm bg-black bg-opacity-80 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"></div>
-                            </div>
-                    </div>
-                    <h3 class="text-2xl font-bold text-yellow-300 mt-6">Missão Ativa</h3>
-                    <p id="mission-status" class="text-lg my-2">Nenhuma missão ativa.</p>
-                </div>
-            </div>`;
-        
-        applyLayout();
-        window.onresize = applyLayout;
+    function listenForEvents() {
+        if (!db) return;
+        const eventsRef = window.firebase.doc(db, `/artifacts/${appId}/public/data/events/activeEvents`);
+        window.firebase.onSnapshot(eventsRef, (doc) => {
+            if (doc.exists()) {
+                gameEvents = doc.data();
+            } else {
+                gameEvents = {};
+            }
+            displayActiveEvents();
+        });
+    }
 
+    function displayActiveEvents() {
+        const banner = document.getElementById('event-banner');
+        let activeEventTexts = [];
+        if (gameEvents.doubleXp && gameEvents.doubleXp.active) {
+            activeEventTexts.push(gameEvents.doubleXp.description);
+        }
+        const now = new Date().getTime();
+        if (gameEvents.newServer && gameEvents.newServer.active && now < gameEvents.newServer.endTime) {
+            activeEventTexts.push("Evento de Novo Servidor");
+        }
+        
+        if (activeEventTexts.length > 0) {
+            banner.innerHTML = `🔥 EVENTO ATIVO: ${activeEventTexts.join(' & ')} 🔥`;
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+    }
+
+    window.onload = async function() {
         soundManager.init();
+        
         userId = await initFirebase();
         
         if (!userId) {
-             showModal("Erro de Conexão", "Não foi possível autenticar com o servidor. Por favor, recarregue a página.");
-             return;
+            return; 
         }
         
         await loadAdminData(); 
@@ -3430,6 +3786,10 @@
         showScreen('main');
     };
     </script>
+
 </body>
 </html>
+
+
+
 
